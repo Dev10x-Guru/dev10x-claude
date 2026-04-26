@@ -1,0 +1,115 @@
+{
+  "description": "Evaluation criteria for Dev10x:skill-reinforcement skill",
+  "evals": [
+    {
+      "name": "direct-match-kubectl",
+      "description": "Agent used kubectl, skill identifies k8s match",
+      "setup": "Agent ran 'kubectl get pods -n staging', user invoked /Dev10x:skill-reinforcement",
+      "checks": [
+        {
+          "type": "behavioral",
+          "assertion": "identifies_offending_command",
+          "signal": "Output contains the kubectl command that was detected"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "recommends_correct_skill",
+          "signal": "Output recommends Dev10x:k8s as the replacement skill"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "includes_reason",
+          "signal": "Output includes explanation of why the skill should be used"
+        }
+      ]
+    },
+    {
+      "name": "no-match-fallback",
+      "description": "Agent used a command with no direct skill mapping",
+      "setup": "Agent ran 'curl https://api.example.com/health', user invoked /Dev10x:skill-reinforcement",
+      "checks": [
+        {
+          "type": "behavioral",
+          "assertion": "acknowledges_no_match",
+          "signal": "Output states no direct skill match was found"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "suggests_related_skills",
+          "signal": "Output lists potentially related skills from SKILLS.md"
+        }
+      ]
+    },
+    {
+      "name": "user-provides-command-arg",
+      "description": "User passes command as argument to the skill",
+      "setup": "User invoked '/Dev10x:skill-reinforcement git push'",
+      "checks": [
+        {
+          "type": "behavioral",
+          "assertion": "uses_provided_command",
+          "signal": "Output identifies 'git push' as the command without scanning conversation"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "recommends_git_skill",
+          "signal": "Output recommends Dev10x:git as the replacement"
+        }
+      ]
+    },
+    {
+      "name": "follow-up-gate-after-rejection",
+      "description": "After a rejected command, skill offers follow-up via AskUserQuestion (not plain text)",
+      "setup": "Agent ran 'Monitor' for CI polling, user rejected it and invoked /Dev10x:skill-reinforcement",
+      "checks": [
+        {
+          "type": "tool_called",
+          "tool": "AskUserQuestion",
+          "assertion": "follow_up_uses_tool",
+          "signal": "AskUserQuestion is called with retry options after the reinforcement message"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "offers_invoke_recommended_skill",
+          "signal": "Options include invoking the recommended skill (e.g., Dev10x:gh-pr-monitor) as the Recommended choice"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "offers_cancel_option",
+          "signal": "Options include cancel/discard to avoid resuming the rejected workflow"
+        },
+        {
+          "type": "behavioral",
+          "assertion": "no_plain_text_followup",
+          "signal": "Output does not use plain-text questions like 'Want me to invoke X?' for the follow-up prompt"
+        }
+      ]
+    },
+    {
+      "name": "no-follow-up-when-informational",
+      "description": "When invoked informationally (not after a rejection), no follow-up gate is fired",
+      "setup": "User invoked '/Dev10x:skill-reinforcement kubectl' to learn the recommended skill, no prior rejection",
+      "checks": [
+        {
+          "type": "behavioral",
+          "assertion": "skips_follow_up_gate",
+          "signal": "AskUserQuestion is not called — the reinforcement message is informational only"
+        }
+      ]
+    }
+  ],
+  "trigger_evals": {
+    "should_trigger": [
+      "User says 'use the skills' after rejecting a bash command",
+      "User invokes /Dev10x:skill-reinforcement explicitly",
+      "User rejects a kubectl command and wants skill guidance",
+      "User says 'there's a skill for that'"
+    ],
+    "should_not_trigger": [
+      "Agent is already using skills correctly",
+      "User is asking about how to create a new skill (use Dev10x:skill-create)",
+      "User wants to list available skills (use Dev10x:skill-index)",
+      "The CLI command has no skill or MCP equivalent"
+    ]
+  }
+}
