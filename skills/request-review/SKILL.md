@@ -43,6 +43,38 @@ Pass `$ARG` as the skill argument (PR URL, bare number, or empty).
 
 If detection fails, report the error and stop.
 
+### Step 1.5: Approval state precheck (GH-993)
+
+Before pinging reviewers, check whether the PR is already
+approved on its current HEAD:
+
+```bash
+gh pr view {PR_NUMBER} --repo {REPO} \
+  --json reviewDecision,reviews,headRefOid
+```
+
+Decision logic:
+
+- `reviewDecision == "APPROVED"` and the latest review's
+  `commit.oid` matches `headRefOid` → PR is approved on the
+  current HEAD. **REQUIRED: Call `AskUserQuestion`** (do NOT
+  use plain text):
+  - **Skip — merge instead (Recommended)** — short-circuit
+    review request and offer to invoke `Dev10x:gh-pr-merge`
+  - **Force request anyway** — proceed to Step 2 with all
+    reviewers (e.g., user wants additional eyes)
+  - **Cancel** — do nothing
+- `reviewDecision == "APPROVED"` but newer commits have landed
+  since the latest approval → approval is stale; proceed
+  normally to Step 2 (re-review needed)
+- `reviewDecision == "CHANGES_REQUESTED"` or `null` → proceed
+  normally to Step 2
+
+Skip this precheck when invoked with `--force` or when the
+caller is `Dev10x:gh-pr-monitor` Phase 3 with explicit
+`bypass_approval_check: true` (re-review request after fixups
+where the monitor has already validated state).
+
 ### Step 2: Assign GitHub reviewers
 
 Delegate to the GitHub reviewer assignment skill:

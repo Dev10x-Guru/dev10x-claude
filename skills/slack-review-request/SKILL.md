@@ -62,6 +62,29 @@ Mentions are resolved against `~/.claude/memory/Dev10x/slack-config.yaml`
 
 ## Flow
 
+### Step 0: Approval state precheck (GH-993)
+
+Before posting a Slack ping, verify the PR is not already approved
+on its current HEAD. Re-pinging reviewers on an approved PR is
+noise — the human supervisor's next action is merge, not another
+review pass.
+
+1. Fetch review state:
+   ```bash
+   gh pr view {pr_number} --repo {repo} \
+     --json reviewDecision,reviews,headRefOid
+   ```
+2. **If `reviewDecision == "APPROVED"`** and the latest review's
+   `commit.oid` matches `headRefOid`: skip the Slack notification.
+   Report "Slack notification skipped — PR already approved on
+   current HEAD" and stop.
+3. **Otherwise**: proceed to Step 1.
+
+Skip this precheck when invoked with `--force` flag or when the
+caller passes `bypass_approval_check: true` (e.g., re-review
+notifications composed by `Dev10x:gh-pr-monitor` Phase 2.7 after
+fixups, where the caller has already validated state).
+
 ### Step 1: Prepare
 
 Resolve project config and format the Slack message:
