@@ -62,6 +62,39 @@ projects:
 - `default_action: ask` prompts the user for unconfigured projects;
   `skip` silently skips them
 
+### Pre-flight: Approval State Check (GH-993)
+
+Before requesting review, verify the PR is not already approved
+on its current HEAD. Spamming reviewers with redundant requests
+on already-approved PRs is the failure mode this guard prevents.
+
+1. Fetch review state:
+   ```bash
+   gh pr view {pr_number} --repo {repo} \
+     --json reviewDecision,reviews,headRefOid
+   ```
+2. **If `reviewDecision == "APPROVED"`** and the latest review's
+   `commit.oid` matches `headRefOid`: the PR is approved on the
+   current HEAD. **REQUIRED: Call `AskUserQuestion`** (do NOT use
+   plain text) with options:
+   - **Skip — already approved (Recommended)** — short-circuit;
+     suggest `Dev10x:gh-pr-merge` instead
+   - **Force request anyway** — proceed (e.g., need additional
+     reviewers beyond the existing approver)
+   - **Cancel** — do nothing
+3. **If `reviewDecision == "APPROVED"`** but newer commits invalidate
+   the approval (latest review `commit.oid` != `headRefOid`): proceed
+   to the re-request flow but **filter out** any reviewer whose latest
+   review on the current HEAD is `APPROVED`. Build the per-reviewer
+   filter from `reviews[]` grouped by `author.login`, taking each
+   author's most recent review.
+4. **Otherwise** (`CHANGES_REQUESTED` or `null`): proceed normally.
+
+Skip this precheck when invoked with `--force` flag or when the
+caller passes `bypass_approval_check: true` (e.g., from
+`Dev10x:gh-pr-monitor` Phase 3 after fixup commits where the monitor
+has already validated the state transition).
+
 ### Pre-flight: Draft State Check (GH-851 F7)
 
 Before requesting review, verify the PR is not in draft state.
