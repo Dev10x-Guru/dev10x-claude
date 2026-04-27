@@ -107,6 +107,22 @@ Files matching: `skills/**`
     Exemptions follow the same rule as 14: orchestration hubs may
     exceed the budget with a one-line justification.
 
+15. **CLI-friction scanner** (GH-5) — run
+    `bin/check-skill-cli-friction.py <changed-skill-files>` and flag any
+    output as CRITICAL. Common findings the scanner detects:
+    - Raw `gh pr|issue|api|repo` in bash fences → must use
+      `mcp__plugin_Dev10x_cli__*` tools
+    - Raw `git commit|push|rebase|checkout -b` → must delegate to the
+      matching `Skill(Dev10x:git-*)` / `Skill(Dev10x:ticket-branch)`
+      wrapper
+    - Raw `pytest` invocation → must use `Skill(Dev10x:py-test)`
+    - `--no-verify` anywhere → CLAUDE.md global rule, no exemption
+    Skills that *implement* a wrapper are exempt automatically (see
+    `SKILL_EXEMPTIONS` in `src/dev10x/skills/audit/cli_friction.py`).
+    For one-off legitimate cases, suggest the inline marker
+    `# cli-friction: allow <rule-id> — reason` rather than adding a
+    skill-wide exemption.
+
 ## Output Format
 
 Apply to ALL `skills/**` files in the diff, including same-PR additions.
