@@ -69,10 +69,11 @@ on its current HEAD. Re-pinging reviewers on an approved PR is
 noise — the human supervisor's next action is merge, not another
 review pass.
 
-1. Fetch review state:
+1. Fetch review state via `gh pr view` (no MCP equivalent yet for
+   `reviewDecision` + `reviews[].commit.oid`):
    ```bash
    gh pr view {pr_number} --repo {repo} \
-     --json reviewDecision,reviews,headRefOid
+     --json reviewDecision,reviews,headRefOid  # cli-friction: allow raw-gh-pr — needs reviewDecision/reviews fields not exposed by pr_detect or verify_pr_state
    ```
 2. **If `reviewDecision == "APPROVED"`** and the latest review's
    `commit.oid` matches `headRefOid`: skip the Slack notification.
