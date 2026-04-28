@@ -12,7 +12,12 @@ invocation-name: Dev10x:gh-pr-respond
 allowed-tools:
   - AskUserQuestion
   - mcp__plugin_Dev10x_cli__pr_comment_reply
-  - Bash(gh:*)
+  - mcp__plugin_Dev10x_cli__pr_comments
+  - mcp__plugin_Dev10x_cli__pr_detect
+  - Bash(gh pr ready:*)
+  - Bash(gh api graphql:*)
+  - Bash(gh api repos/:*)
+  - Bash(jq:*)
   - Skill(Dev10x:gh-pr-triage)
   - Skill(Dev10x:gh-pr-fixup)
   - Skill(Dev10x:git-groom)

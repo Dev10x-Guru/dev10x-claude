@@ -21,7 +21,6 @@ allowed-tools:
   - Read
   - Write(docs/memos/**)
   - Bash(gh pr list:*)
-  - Bash(gh api repos/:*)
   - TaskCreate
   - TaskUpdate
   - Skill(Dev10x:project-scope)
