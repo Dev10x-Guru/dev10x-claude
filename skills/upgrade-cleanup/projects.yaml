@@ -231,7 +231,6 @@ base_permissions:
   - "Bash(uv run --extra dev pytest:*)"
   - "Bash(uv run ruff:*)"
   - "Bash(uv run dev10x:*)"
-  - "Bash(uv run python:*)"
 
   # --- YAML config parsing (GH-20) ---
   # Skills like slack-review-request, verify-acc-dod, and
