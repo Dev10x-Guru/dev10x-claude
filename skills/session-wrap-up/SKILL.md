@@ -10,7 +10,7 @@ description: >
 user-invocable: true
 invocation-name: Dev10x:session-wrap-up
 allowed-tools:
-  - Bash(gh pr list:*)
+  - mcp__plugin_Dev10x_cli__pr_detect
 ---
 
 # Dev10x:session-wrap-up — Session End Orchestrator
@@ -68,10 +68,12 @@ session (lines starting with `+` that contain TODO or FIXME).
 
 ### 1d. Open PRs
 
-```bash
-gh pr list --head "$(git branch --show-current)" --state open \
-  --json number,title,url --limit 5
-```
+Call `mcp__plugin_Dev10x_cli__pr_detect(arg="")` (no arg) — the
+tool auto-detects the PR for the current branch and returns
+`pr_number`, `repo`, `pr_url`, and `branch`. Treat an `error`
+response (no PR for branch) as "no open PR" rather than a
+failure. No raw `gh` invocation or branch-name subshell is
+needed.
 
 ### 1e. Project TODO file
 

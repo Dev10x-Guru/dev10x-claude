@@ -172,10 +172,10 @@ detection. If unavailable, warn and stop — do NOT silently fall
 back to `git -C` (GH-759 F1). The `git -C` fallback cascades
 across nested skills, breaking allow-rule matching.
 
-1. Extract the PR branch name:
-   ```bash
-   gh pr view {pr_number} --repo {owner}/{repo} --json headRefName -q .headRefName
-   ```
+1. Extract the PR branch name via
+   `mcp__plugin_Dev10x_cli__pr_detect(arg="<pr_number>")` —
+   returns `head_ref` (the branch name) along with `repo` and
+   `state`. No raw `gh pr view` call is needed.
 2. Check if the branch is checked out in the current worktree:
    ```bash
    git symbolic-ref --short HEAD
@@ -311,12 +311,11 @@ See `references/github_api.md` § Hiding (Minimizing) Comments.
 
 ### Step 2: Check for remaining comments
 
-After processing the single comment, check for other unaddressed root comments:
-
-```bash
-gh api repos/{owner}/{repo}/pulls/{pr_number}/comments \
-  | jq '[.[] | select(.in_reply_to_id == null)]'
-```
+After processing the single comment, check for other unaddressed
+root comments via
+`mcp__plugin_Dev10x_cli__pr_comments(action="list", pr_number=<N>)`
+and filter the returned list to entries whose `in_reply_to_id`
+is null.
 
 ### Step 3: Offer to continue
 
@@ -346,14 +345,13 @@ This blocks execution until the user decides how to proceed. Options:
 
 ### Step 1: Collect unaddressed comments
 
-**For a PR URL or number:**
-```bash
-gh api repos/{owner}/{repo}/pulls/{pr_number}/comments \
-  | jq '[.[] | select(.in_reply_to_id == null)]'
-```
+**For a PR URL or number:** call
+`mcp__plugin_Dev10x_cli__pr_comments(action="list", pr_number=<N>)`
+and keep entries whose `in_reply_to_id` is null.
 
 **For a review URL** (`#pullrequestreview-{review_id}`):
-Filter to only comments from that review (match `pull_request_review_id`).
+filter the same MCP result to comments whose
+`pull_request_review_id` matches the review ID.
 
 **Always check the review body for findings**, even when inline
 comments exist. CI hygiene reviews from `claude[bot]` commonly
@@ -682,15 +680,19 @@ external approval.
 
 ## Tools
 
-Use `gh api` for PR comment operations:
+Prefer MCP tools for PR comment operations; reach for `gh api`
+only for endpoints that have no MCP wrapper (review listings,
+GraphQL mutations).
 
-| Operation | Command |
+| Operation | Tool |
 |---|---|
-| List comments | `gh api repos/{owner}/{repo}/pulls/{N}/comments` |
-| Filter root only | `\| jq '[.[] \| select(.in_reply_to_id == null)]'` |
-| Fetch one comment | `gh api repos/{owner}/{repo}/pulls/comments/{id}` |
+| List comments | `mcp__plugin_Dev10x_cli__pr_comments(action="list", pr_number=N)` |
+| Fetch one comment | `mcp__plugin_Dev10x_cli__pr_comments(action="get", comment_id=ID)` |
 | Reply to thread | `mcp__plugin_Dev10x_cli__pr_comment_reply(pr_number=N, comment_id=ID, body="...")` |
+| Filter root-only | Filter MCP result on `in_reply_to_id == null` |
 | Resolve thread | See `references/github_api.md` GraphQL section |
+| List reviews | `gh api repos/{owner}/{repo}/pulls/{N}/reviews` (no MCP) |
+| Minimize comment | `gh api graphql` minimizeComment (no MCP) |
 
 ---
 

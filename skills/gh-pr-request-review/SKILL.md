@@ -10,10 +10,10 @@ invocation-name: Dev10x:gh-pr-request-review
 allowed-tools:
   - mcp__plugin_Dev10x_cli__request_review
   - mcp__plugin_Dev10x_cli__pr_detect
-  - Bash(gh repo view:*)
   - Bash(gh pr view:*)
   - Bash(gh pr ready:*)
-  - Bash(gh api:*)
+  - Bash(gh api orgs/:*)
+  - Bash(git remote get-url:*)
   - Bash(yq:*)
   - Bash(jq:*)
   - AskUserQuestion
@@ -73,7 +73,8 @@ Before requesting review, verify the PR is not already approved
 on its current HEAD. Spamming reviewers with redundant requests
 on already-approved PRs is the failure mode this guard prevents.
 
-1. Fetch review state:
+1. Fetch review state (no MCP wrapper exists for review-decision
+   data — `gh pr view` is the supported call site):
    ```bash
    gh pr view {pr_number} --repo {repo} \
      --json reviewDecision,reviews,headRefOid
@@ -106,14 +107,21 @@ Before requesting review, verify the PR is not in draft state.
 GitHub silently accepts review requests on draft PRs but does
 NOT notify the requested reviewers — the request is lost.
 
-1. Check draft state via MCP: `mcp__plugin_Dev10x_cli__pr_detect`
-   or `gh pr view --json isDraft --jq .isDraft`
-2. If `isDraft == true`: run `gh pr ready` first, then proceed
-3. If `isDraft == false`: proceed to reviewer resolution
+1. Confirm PR identity via
+   `mcp__plugin_Dev10x_cli__pr_detect(arg="<pr_number_or_url>")`
+   to resolve `pr_number` and `repo`, then fetch the draft flag
+   (no MCP wrapper exists for `isDraft`):
+   ```bash
+   gh pr view {pr_number} --repo {repo} --json isDraft -q .isDraft
+   ```
+2. If draft: run `gh pr ready` first, then proceed
+3. If not draft: proceed to reviewer resolution
 
 ### Resolution workflow
 
-1. Detect the current repo: `gh repo view --json name --jq .name`
+1. Detect the current repo: parse `git remote get-url origin`
+   (or call `mcp__plugin_Dev10x_cli__pr_detect` and use its
+   returned `repo` field — last path segment is the repo name)
 2. Read and parse the config file using `yq`:
    `yq '.projects["REPO_NAME"]' ~/.claude/memory/Dev10x/github-reviewers-config.yaml`
 3. Look up the repo name in `projects`:

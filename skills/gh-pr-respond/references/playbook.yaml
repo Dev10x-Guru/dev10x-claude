@@ -143,11 +143,13 @@ defaults:
           Auto-advance when green.
       - subject: Merge PR
         type: detailed
+        skills: [Dev10x:gh-pr-merge]
         prompt: >
-          When CI passes and no new review comments exist, merge
-          via `gh pr merge --squash --delete-branch`. In solo-
-          maintainer mode, merge automatically. Otherwise, stop
-          and report ready-to-merge status.
+          When CI passes and no new review comments exist,
+          delegate to Dev10x:gh-pr-merge — never run raw
+          `gh pr merge`. In solo-maintainer mode the skill
+          merges automatically; otherwise it stops and reports
+          ready-to-merge status.
         condition: ci-green-no-comments
 
 overrides: []
