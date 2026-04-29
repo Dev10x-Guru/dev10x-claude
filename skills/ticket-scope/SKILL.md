@@ -39,6 +39,17 @@ The full workflow — ticket fetch, context gathering, research
 loop, story point sizing, AC generation, comment writeback —
 lives in [`instructions.md`](instructions.md).
 
-When this skill is invoked, Read `instructions.md` now and
-follow it end-to-end. `TaskCreate` calls and `AskUserQuestion`
-gates documented there are REQUIRED.
+**REQUIRED before ANY other tool call:** Read
+[`instructions.md`](instructions.md) end-to-end. The
+orchestration contract (TaskCreate calls, phase ordering,
+AskUserQuestion gates, mandatory delegations like
+`Skill(Dev10x:jtbd)` and template selection) lives there —
+not in this SKILL.md. Skipping the read causes downstream
+phase bypasses (GH-26, GH-27, GH-28).
+
+**Self-check after the read:** Confirm you can name the
+six TaskCreate subjects, the Phase 4b skill delegation,
+and the Phase 5.1 templates before fetching the ticket.
+If you cannot, re-read the file. Do NOT proceed to
+`mcp__plugin_Dev10x_cli__issue_get` (or any other tool)
+until the read is complete.
