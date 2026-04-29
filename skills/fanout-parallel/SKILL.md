@@ -296,6 +296,31 @@ If a child needs to run without parent-context inheritance, find
 an isolation flag that does not strip credentials. As of
 2026-04, no such flag exists — children always inherit OAuth.
 
+### Cold-load cost floor (~$0.20–0.50 per child) (GH-31)
+
+Each child `claude -p` subprocess that loads the Dev10x plugin
+cold incurs **~79K cache-creation tokens** before doing useful
+work. Live measurements during the GH-4 PoC observed roughly
+**$0.20 on Sonnet** and **$0.50 on the unspecified default
+model** per child, and a `--max-budget-usd 0.10` invocation
+failed with `error_max_budget_usd` before any output.
+
+**Recommended budget floor:** `--max-budget-usd 1.50` (sufficient
+for meaningful child work after the cold-load tax).
+
+```bash
+# ❌ Too low — fails with error_max_budget_usd before any output
+claude -p --max-budget-usd 0.10 "..."
+
+# ✅ Empirically sufficient
+claude -p --max-budget-usd 1.50 "..."
+```
+
+**Warm-cache reuse across siblings:** Not yet confirmed. If a
+parent dispatches multiple children in the same session, whether
+they share a warm plugin cache (and pay the 79K tokens once vs
+N times) is open. Measure before assuming amortization.
+
 ## Known Limitations
 
 - **This is experimental.** Results may vary across Claude Code
