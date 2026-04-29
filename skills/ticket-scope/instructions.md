@@ -44,6 +44,18 @@ Options:
 - Approve (Recommended) — Save document and optionally update Linear
 - Revise — I have corrections to the scope
 - More research needed — Need to explore additional areas
+- Run PoC — Validate unverified architectural claims via a live
+  proof-of-concept before approving (e.g., `claude -p` subprocesses,
+  small scripts, or codebase probes that confirm a claim the scope
+  depends on)
+
+**When to surface "Run PoC":** Whenever the scope contains claims
+the agent could not verify by reading the codebase alone (e.g.,
+"approach X loads the plugin in a child session", "tool Y
+propagates env vars to subprocesses"). Listing the option
+short-circuits the manual escalation pattern observed in audit
+session 1d53f6ec — the user otherwise has to invent the PoC step
+themselves under "More research needed" (GH-33).
 
 ## Prerequisites
 
