@@ -77,6 +77,8 @@ supporting each tool:
 | `next_worktree_name` | `cli` | PR #126 | v0.25.0+ |
 | `setup_aliases` | `cli` | PR #288 | v0.30.0+ |
 | `mktmp` | `cli` | PR #160 | v0.26.0+ |
+| `audit_hook_log_path` | `cli` | GH-29 | v0.69.0+ |
+| `audit_hook_recent` | `cli` | GH-29 | v0.69.0+ |
 | `query` | `db` | PR #126 | v0.25.0+ |
 
 When adding a new tool, update this table and note any dependencies on
