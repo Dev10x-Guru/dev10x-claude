@@ -126,7 +126,9 @@ RULES: tuple[Rule, ...] = (
         rule_id="raw-gh-repo",
         pattern=re.compile(_CMD_START + r"gh\s+repo\s+view\b"),
         message="Raw `gh repo view` command in skill doc",
-        suggestion="Use `mcp__plugin_Dev10x_cli__pr_detect` (returns repo) or `detect_base_branch`",
+        suggestion=(
+            "Use `mcp__plugin_Dev10x_cli__pr_detect` (returns repo) or `detect_base_branch`"
+        ),
     ),
     Rule(
         rule_id="raw-git-commit",
@@ -146,7 +148,10 @@ RULES: tuple[Rule, ...] = (
         rule_id="raw-git-rebase",
         pattern=re.compile(_CMD_START + r"git\s+rebase\b"),
         message="Raw `git rebase` command in skill doc",
-        suggestion="Use `Skill(Dev10x:git-groom)` for history rewrites, `Skill(Dev10x:git)` for unattended rebases",
+        suggestion=(
+            "Use `Skill(Dev10x:git-groom)` for history rewrites, "
+            "`Skill(Dev10x:git)` for unattended rebases"
+        ),
     ),
     Rule(
         rule_id="raw-git-branch",

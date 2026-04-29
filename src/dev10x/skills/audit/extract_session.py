@@ -188,9 +188,8 @@ def process_jsonl(jsonl_path: str, out: TextIO) -> None:
 
             if tool_results:
                 for tr in tool_results:
-                    out.write(
-                        f"<details><summary>Tool result ({tr['tool_use_id'][:12]}...)</summary>\n\n"
-                    )
+                    summary_id = tr["tool_use_id"][:12]
+                    out.write(f"<details><summary>Tool result ({summary_id}...)</summary>\n\n")
                     out.write(f"```\n{tr['content']}\n```\n")
                     out.write("</details>\n\n")
 
