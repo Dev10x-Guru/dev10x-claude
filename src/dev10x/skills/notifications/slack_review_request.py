@@ -152,7 +152,10 @@ def cmd_prepare(args: argparse.Namespace) -> None:
                 {
                     "skip": False,
                     "ask": True,
-                    "reason": f"No config found for '{repo_name}'. User should provide channel and mentions.",
+                    "reason": (
+                        f"No config found for '{repo_name}'. "
+                        "User should provide channel and mentions."
+                    ),
                     "channel": None,
                     "mentions": [],
                     "message": None,
