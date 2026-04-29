@@ -321,6 +321,35 @@ parent dispatches multiple children in the same session, whether
 they share a warm plugin cache (and pay the 79K tokens once vs
 N times) is open. Measure before assuming amortization.
 
+### Parent hooks fire inside the child (GH-32)
+
+When the parent dispatches a child `claude -p`, the parent's
+PreToolUse hooks (e.g., `validate-bash`) are inherited and
+**DO fire on the child's tool calls**. Confirmed via the GH-4
+PoC turn 73 hook-probe. This is desirable — the child is
+guarded by the same safety rails as the parent — but it has
+two surprising consequences skill authors must plan for:
+
+1. **Hook-blocked patterns inside child prompts** — if the
+   parent prompt contains a string that *matches* a hook block
+   pattern (e.g., the prompt text describes a blocked Bash
+   idiom for documentation purposes), the parent's own hook
+   can fire on the parent Bash invocation that wraps the child
+   `claude -p` call. The block is on the *parent* command line,
+   not on anything the child actually executed. Workaround:
+   pass the child prompt via `--prompt-file` instead of inline.
+
+2. **Hook config drift** — children inherit *parent* hooks at
+   dispatch time. If the child triggers a new session that
+   reloads hook config (e.g., via SessionStart), the effective
+   hook set may differ from the parent's. Treat the child as
+   running under the parent's hooks unless explicitly proven
+   otherwise.
+
+When writing a fanout child prompt, assume parent hook coverage
+(use the same MCP tools, avoid the same blocked idioms) and
+keep prompt strings free of literal blocked patterns.
+
 ## Known Limitations
 
 - **This is experimental.** Results may vary across Claude Code
