@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
-
-T = TypeVar("T")
+from typing import Any
 
 
 @dataclass(frozen=True)
-class SuccessResult(Generic[T]):
+class SuccessResult[T]:
     value: T
 
     def to_dict(self) -> dict[str, Any]:
@@ -27,10 +25,10 @@ class ErrorResult:
         return result
 
 
-Result = SuccessResult[T] | ErrorResult
+type Result[T] = SuccessResult[T] | ErrorResult
 
 
-def ok(value: T) -> SuccessResult[T]:
+def ok[T](value: T) -> SuccessResult[T]:
     return SuccessResult(value=value)
 
 
