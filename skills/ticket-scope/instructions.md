@@ -172,10 +172,31 @@ must fire.
 
 #### 5.1 Select Template
 
-Based on task type:
+**REQUIRED: Read one of the three templates and use its
+section structure.** Do NOT hand-craft the scope document
+without consulting a template — different sessions produce
+different shapes, breaking downstream consumers (PR creation,
+project audit) that expect template-stable section names
+(GH-28).
+
+Pick by task type and `Read` the corresponding file before
+writing the scope document:
+
 - Business Feature → `references/business-feature-template.md`
 - Technical Task → `references/technical-task-template.md`
 - Bug Fix → `references/bug-fix-template.md`
+
+**Verification:** Before the Phase 5.2 Write call that creates
+the scope document, confirm the section headings match the
+template's headings exactly (Job Story, Objective, Technical
+Approach, Architecture, …). If a heading is missing or
+renamed, you skipped the template — go back and read it.
+
+**Anti-pattern (GH-28):** Writing
+`/tmp/Dev10x/ticket-scope/<ID>-scope.md` with custom section
+names ("Findings", "Approach Notes", etc.) instead of the
+template's section names. Even when the content is correct,
+the diverged structure breaks audits and PR generation.
 
 #### 5.2 Complete All Sections
 
