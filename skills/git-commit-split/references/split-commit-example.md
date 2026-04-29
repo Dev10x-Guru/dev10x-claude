@@ -76,7 +76,7 @@ git add src/app/collections.py
 **Commit:**
 
 ```bash
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 ✨ PAY-314 Add as_dict decorator to collections module
 
 Add as_dict decorator that converts iterator of tuples to dict,
@@ -104,7 +104,7 @@ git add src/app_pos/orders/returns/repository.py \
 **Commit:**
 
 ```bash
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 ✨ PAY-314 Add batch method for retrieving return quantities
 
 Add ReturnOrderRepository.get_returns_qty_batch() for efficient
@@ -150,7 +150,7 @@ git add src/app_pos/orders/returns/dto.py \
 **Commit:**
 
 ```bash
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 ♻️ PAY-314 Add RemainingQuantityCalculator and refactor
 
 Add RemainingQuantityCalculator to compute returnable quantities
@@ -201,7 +201,7 @@ git add src/app_pos/orders/returns/dto.py \
 **Commit:**
 
 ```bash
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 ✨ PAY-314 Add PendingReturnOrderService
 
 Add PendingReturnOrderService to aggregate work order services
@@ -233,7 +233,7 @@ git add src/app_pos/orders/returns/api/dto.py \
 **Commit:**
 
 ```bash
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 ✨ PAY-314 Expose remaining quantities via GraphQL API
 
 Update GetPendingReturnOrderQuery to return pending return order
@@ -270,7 +270,7 @@ b2038670 ✨ PAY-314 Add as_dict decorator to collections module
 **Run tests for all commits:**
 
 ```bash
-pytest src/app_pos/orders/returns/tests/ -v
+Skill(Dev10x:py-test src/app_pos/orders/returns/tests/ -v)
 ```
 
 **Result:** 118 passed, all tests passing
@@ -280,7 +280,7 @@ pytest src/app_pos/orders/returns/tests/ -v
 ```bash
 for commit in $(git log --reverse --format=%H develop..HEAD); do
   git checkout $commit
-  pytest src/app_pos/orders/returns/tests/
+  Skill(Dev10x:py-test src/app_pos/orders/returns/tests/)
 done
 ```
 

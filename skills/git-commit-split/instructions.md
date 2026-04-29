@@ -160,7 +160,7 @@ Use the Dev10x:git-commit skill conventions:
 - 72 character limit for title
 
 ```bash
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 TICKET-ID Brief description of first change
 
 Detailed explanation of what this change does and why.
@@ -180,7 +180,7 @@ EOF
 git add files_for_next_change...
 
 # Commit
-git commit --no-verify -m "$(cat <<'EOF'
+git commit --no-verify -m "$(cat <<'EOF'  # cli-friction: allow no-verify — split-rebase example, hooks re-run after final commit
 TICKET-ID Next logical change
 
 Description...
@@ -212,14 +212,14 @@ EOF
 
 # Commit 4: Refactoring (uses WorkOrderNo type)
 git add dto.py  # Only the type change line
-git commit --no-verify -m "TICKET-ID Improve type safety..."
+git commit --no-verify -m "TICKET-ID Improve type safety..."  # cli-friction: allow no-verify — split-rebase example
 
 # Commit 5: New service (uses ServiceItemQuantity, PendingReturnOrder)
 git add dto.py  # The new DTO classes
 git add main.py  # The service implementation
 git add tests/fakers.py  # Fakers for the DTOs
 git add tests/test_main.py  # Tests for the service
-git commit --no-verify -m "TICKET-ID Add new service..."
+git commit --no-verify -m "TICKET-ID Add new service..."  # cli-friction: allow no-verify — split-rebase example
 ```
 
 #### Scenario B: Separating Refactoring from New Features
@@ -267,14 +267,14 @@ git add main.py tests/test_main.py
 # Edit main.py to remove PendingReturnOrderService class
 # Edit imports to remove PendingReturnOrder, ServiceItemQuantity
 
-git commit --no-verify -m "TICKET-ID Refactoring..."
+git commit --no-verify -m "TICKET-ID Refactoring..."  # cli-friction: allow no-verify — split-rebase example
 
 # For second commit (new service)
 # Edit main.py to add back PendingReturnOrderService class
 # Edit imports to add back the DTOs
 
 git add main.py dto.py tests/fakers.py tests/test_main.py
-git commit --no-verify -m "TICKET-ID Add new service..."
+git commit --no-verify -m "TICKET-ID Add new service..."  # cli-friction: allow no-verify — split-rebase example
 ```
 
 ### Step 6: Continue Rebase
@@ -303,7 +303,7 @@ git rebase --continue
 for commit in $(git log --reverse --format=%H develop..HEAD); do
   echo "=== Testing $commit ==="
   git checkout $commit
-  pytest path/to/tests/
+  Skill(Dev10x:py-test path/to/tests/)
   if [ $? -ne 0 ]; then
     echo "Tests failed at $commit"
     break
@@ -335,7 +335,7 @@ git log -p develop..HEAD
 **Run full test suite:**
 
 ```bash
-pytest path/to/tests/
+Skill(Dev10x:py-test path/to/tests/)
 ```
 
 **Run linters if skipped during split:**
