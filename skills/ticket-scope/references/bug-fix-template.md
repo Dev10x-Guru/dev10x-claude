@@ -137,7 +137,7 @@ Example:
    - Reference: Existing terminal checkout tests
 
 6. **Run Tests**
-   - Command: `pytest src/payments/square/tests/ src/payments/square/terminal/tests/`
+   - Command: `Skill(Dev10x:py-test src/payments/square/tests/ src/payments/square/terminal/tests/)`
    - Verify: All tests pass, new bug scenario covered
 
 ---

@@ -20,16 +20,14 @@ fi
 
 echo "🔍 Running pre-PR checks..."
 
-echo "  [1/4] ruff check..."
+echo "  [1/3] ruff check..."
 ruff check . || { echo "❌ Ruff check failed. Fix linting issues."; exit 1; }
 
-echo "  [2/4] ruff format check..."
+echo "  [2/3] ruff format check..."
 ruff format --check . || { echo "❌ Formatting check failed. Run: ruff format ."; exit 1; }
 
-echo "  [3/4] MyPy type check..."
+echo "  [3/3] MyPy type check..."
 mypy . || { echo "❌ MyPy check failed. Fix type errors."; exit 1; }
 
-echo "  [4/4] Running tests..."
-pytest || { echo "❌ Tests failed. Fix failing tests."; exit 1; }
-
-echo "✅ All pre-PR checks passed!"
+echo "✅ All pre-PR static checks passed!"
+echo "ℹ️  Tests are run separately via Skill(Dev10x:py-test) in the shipping pipeline."

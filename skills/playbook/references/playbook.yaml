@@ -343,7 +343,7 @@ defaults:
         steps:
           - subject: Run tests
             type: detailed
-            prompt: Run pytest with coverage. Fix failures.
+            prompt: Run via Skill(Dev10x:py-test) with coverage. Fix failures.
             skills: [test]
           - subject: Run lint
             type: detailed
@@ -404,7 +404,7 @@ defaults:
         steps:
           - subject: Run existing tests
             type: detailed
-            prompt: Run pytest with coverage. Ensure no regressions.
+            prompt: Run via Skill(Dev10x:py-test) with coverage. Ensure no regressions.
             skills: [test]
           - subject: Add regression test
             type: detailed
@@ -474,7 +474,7 @@ defaults:
         steps:
           - subject: Run tests
             type: detailed
-            prompt: Run pytest with coverage. Fix failures.
+            prompt: Run via Skill(Dev10x:py-test) with coverage. Fix failures.
             skills: [test]
           - subject: Run lint
             type: detailed

@@ -78,7 +78,7 @@ Example:
    - Pattern: No new tests needed if behavior unchanged
 
 5. **Run Full Test Suite**
-   - Command: `pytest src/payments/tests/`
+   - Command: `Skill(Dev10x:py-test src/payments/tests/)`
    - Verify: 100% passing
    - Check: Coverage maintained
 
