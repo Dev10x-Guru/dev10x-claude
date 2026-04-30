@@ -127,7 +127,7 @@ class TestUpdatePathsSubCommandRoute:
         )
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.permission._run_sub_command")
+    @patch("dev10x.permission._run_sub_command")
     async def test_ensure_reads_routes_to_sub_command(
         self,
         mock_sub: AsyncMock,
