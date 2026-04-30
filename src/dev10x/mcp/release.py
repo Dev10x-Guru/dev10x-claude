@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from dev10x.mcp.subprocess_utils import async_run, get_plugin_root
+from dev10x.subprocess_utils import async_run, get_plugin_root
 
 
 async def collect_prs(

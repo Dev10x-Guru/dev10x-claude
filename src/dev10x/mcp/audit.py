@@ -16,7 +16,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from dev10x.mcp.subprocess_utils import async_run_script
+from dev10x.subprocess_utils import async_run_script
 
 _DEFAULT_HOOK_AUDIT_DIR = "/tmp/Dev10x/hook-audit"
 

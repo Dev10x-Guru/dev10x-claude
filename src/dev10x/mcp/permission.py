@@ -11,7 +11,7 @@ import io
 from contextlib import redirect_stdout
 from typing import Any
 
-from dev10x.mcp.subprocess_utils import async_run, get_plugin_root
+from dev10x.subprocess_utils import async_run, get_plugin_root
 
 
 def _run_sub_command(

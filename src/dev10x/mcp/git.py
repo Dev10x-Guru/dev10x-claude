@@ -12,7 +12,7 @@ import json
 from typing import Any
 
 from dev10x.domain.result import Result, err, ok
-from dev10x.mcp.subprocess_utils import async_run_script, parse_key_value_output
+from dev10x.subprocess_utils import async_run_script, parse_key_value_output
 
 
 async def push_safe(

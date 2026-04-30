@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from dev10x.mcp.subprocess_utils import async_run_script
+from dev10x.subprocess_utils import async_run_script
 
 
 async def generate_all(
