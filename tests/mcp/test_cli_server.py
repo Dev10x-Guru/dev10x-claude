@@ -176,7 +176,11 @@ class TestResolveRepo:
         assert result.value == RepositoryRef(owner="owner", name="repo")
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._detect_repo", new_callable=AsyncMock, return_value="detected/repo")
+    @patch(
+        "dev10x.mcp.github._detect_repo",
+        new_callable=AsyncMock,
+        return_value="detected/repo",
+    )
     async def test_detects_repo_when_none_provided(
         self,
         _mock: AsyncMock,
@@ -230,16 +234,41 @@ class TestDetectTracker:
 class TestMktmp:
     @pytest.mark.asyncio
     @patch("dev10x.mcp.utilities.async_run_script", new_callable=AsyncMock)
-    async def test_creates_temp_file(
+    async def test_returns_path_without_creating_file_by_default(
         self,
         mock_run: AsyncMock,
     ) -> None:
-        mock_run.return_value = _completed(stdout="/tmp/Dev10x/git/commit-msg.abc123.txt")
+        mock_run.return_value = _completed(
+            stdout="/tmp/Dev10x/git/commit-msg.abc123.txt"
+        )
 
-        result = await cli_server.mktmp(namespace="git", prefix="commit-msg", ext=".txt")
+        result = await cli_server.mktmp(
+            namespace="git", prefix="commit-msg", ext=".txt"
+        )
 
         assert result["path"] == "/tmp/Dev10x/git/commit-msg.abc123.txt"
-        mock_run.assert_called_once()
+        called_args = mock_run.call_args.args
+        assert "--create" not in called_args
+        assert "-d" not in called_args
+
+    @pytest.mark.asyncio
+    @patch("dev10x.mcp.utilities.async_run_script", new_callable=AsyncMock)
+    async def test_passes_create_flag_when_requested(
+        self,
+        mock_run: AsyncMock,
+    ) -> None:
+        mock_run.return_value = _completed(stdout="/tmp/Dev10x/git/legacy.abc.txt")
+
+        await cli_server.mktmp(
+            namespace="git",
+            prefix="legacy",
+            ext=".txt",
+            create=True,
+        )
+
+        called_args = mock_run.call_args.args
+        assert "--create" in called_args
+        assert "-d" not in called_args
 
     @pytest.mark.asyncio
     @patch("dev10x.mcp.utilities.async_run_script", new_callable=AsyncMock)
@@ -249,9 +278,33 @@ class TestMktmp:
     ) -> None:
         mock_run.return_value = _completed(stdout="/tmp/Dev10x/audit/session.abc123")
 
-        result = await cli_server.mktmp(namespace="audit", prefix="session", directory=True)
+        result = await cli_server.mktmp(
+            namespace="audit", prefix="session", directory=True
+        )
 
         assert result["path"] == "/tmp/Dev10x/audit/session.abc123"
+        called_args = mock_run.call_args.args
+        assert "-d" in called_args
+        assert "--create" not in called_args
+
+    @pytest.mark.asyncio
+    @patch("dev10x.mcp.utilities.async_run_script", new_callable=AsyncMock)
+    async def test_directory_mode_ignores_create_flag(
+        self,
+        mock_run: AsyncMock,
+    ) -> None:
+        mock_run.return_value = _completed(stdout="/tmp/Dev10x/audit/session.abc")
+
+        await cli_server.mktmp(
+            namespace="audit",
+            prefix="session",
+            directory=True,
+            create=True,
+        )
+
+        called_args = mock_run.call_args.args
+        assert "-d" in called_args
+        assert "--create" not in called_args
 
     @pytest.mark.asyncio
     @patch("dev10x.mcp.utilities.async_run_script", new_callable=AsyncMock)
