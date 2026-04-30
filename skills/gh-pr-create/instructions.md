@@ -336,10 +336,17 @@ don't apply to this PR, then update the PR body with strikethroughs:
 
 **Strike-through format:** Replace `- [ ] item text` with `- ~item text~`
 
-**Update PR body:**
+**Update PR body:** Use the REST API rather than `gh pr edit` to
+avoid GraphQL Projects-classic deprecation warnings causing exit 1
+on a successful update (GH-41):
+
 ```bash
 PR_NUMBER=$(gh pr view --json number -q .number)
-gh pr edit "$PR_NUMBER" --body "$UPDATED_BODY"
+REPO_NWO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+BODY_FILE=$(mktemp)
+trap 'rm -f "$BODY_FILE"' EXIT
+printf '%s' "$UPDATED_BODY" > "$BODY_FILE"
+gh api -X PATCH "repos/$REPO_NWO/pulls/$PR_NUMBER" -F "body=@$BODY_FILE"
 ```
 
 ### Step 8: Open PR in Browser
