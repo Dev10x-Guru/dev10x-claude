@@ -46,6 +46,15 @@ PR_NUMBER=$(gh pr view --json number -q .number)
 LINKED_COMMITS=$("$SCRIPT_DIR/generate-commit-list.sh" "$PR_NUMBER" "$BASE_BRANCH")
 FINAL_BODY=$(printf '%s\n\n---\n\n%s%s\n\n---\n\n%s' \
     "$JOB_STORY" "$LINKED_COMMITS" "$FIXES_LINE" "$CHECKLIST")
-gh pr edit "$PR_NUMBER" --body "$FINAL_BODY"
+
+# Use REST API instead of `gh pr edit` to avoid GraphQL Projects-classic
+# deprecation warnings causing exit 1 even when the body update succeeds.
+# See GH-41 for context (session c83f5182).
+REPO_NWO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+BODY_FILE=$(mktemp)
+trap 'rm -f "$BODY_FILE"' EXIT
+printf '%s' "$FINAL_BODY" > "$BODY_FILE"
+gh api -X PATCH "repos/$REPO_NWO/pulls/$PR_NUMBER" -F "body=@$BODY_FILE" \
+    --jq '.number' > /dev/null
 
 echo "$PR_NUMBER"
