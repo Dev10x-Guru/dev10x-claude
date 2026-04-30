@@ -344,7 +344,9 @@ async def generate_commit_list(pr_number: int, base_branch: str | None = None) -
     """
     from dev10x.mcp import github as gh
 
-    return (await gh.generate_commit_list(pr_number=pr_number, base_branch=base_branch)).to_dict()
+    return (
+        await gh.generate_commit_list(pr_number=pr_number, base_branch=base_branch)
+    ).to_dict()
 
 
 @server.tool()
@@ -360,7 +362,9 @@ async def post_summary_comment(issue_id: str, summary_text: str) -> dict:
     """
     from dev10x.mcp import github as gh
 
-    return (await gh.post_summary_comment(issue_id=issue_id, summary_text=summary_text)).to_dict()
+    return (
+        await gh.post_summary_comment(issue_id=issue_id, summary_text=summary_text)
+    ).to_dict()
 
 
 @server.tool()
@@ -415,7 +419,9 @@ async def pr_notify(
 
 
 @server.tool()
-async def push_safe(args: list[str], protected_branches: list[str] | None = None) -> dict:
+async def push_safe(
+    args: list[str], protected_branches: list[str] | None = None
+) -> dict:
     """Safely push git branches with protection for main/develop.
 
     Args:
@@ -427,7 +433,9 @@ async def push_safe(args: list[str], protected_branches: list[str] | None = None
     """
     from dev10x.mcp import git as git_tools
 
-    return (await git_tools.push_safe(args=args, protected_branches=protected_branches)).to_dict()
+    return (
+        await git_tools.push_safe(args=args, protected_branches=protected_branches)
+    ).to_dict()
 
 
 @server.tool()
@@ -443,7 +451,9 @@ async def rebase_groom(seq_path: str, base_ref: str) -> dict:
     """
     from dev10x.mcp import git as git_tools
 
-    return (await git_tools.rebase_groom(seq_path=seq_path, base_ref=base_ref)).to_dict()
+    return (
+        await git_tools.rebase_groom(seq_path=seq_path, base_ref=base_ref)
+    ).to_dict()
 
 
 @server.tool()
@@ -464,7 +474,9 @@ async def create_worktree(
     """
     from dev10x.mcp import git as git_tools
 
-    return (await git_tools.create_worktree(branch=branch, base=base, path=path)).to_dict()
+    return (
+        await git_tools.create_worktree(branch=branch, base=base, path=path)
+    ).to_dict()
 
 
 @server.tool()
@@ -496,7 +508,9 @@ async def start_split_rebase(commit_hash: str, base_branch: str = "develop") -> 
     from dev10x.mcp import git as git_tools
 
     return (
-        await git_tools.start_split_rebase(commit_hash=commit_hash, base_branch=base_branch)
+        await git_tools.start_split_rebase(
+            commit_hash=commit_hash, base_branch=base_branch
+        )
     ).to_dict()
 
 
@@ -536,21 +550,35 @@ async def mktmp(
     prefix: str,
     ext: str = "",
     directory: bool = False,
+    create: bool = False,
 ) -> dict:
-    """Create a unique temp file or directory under /tmp/Dev10x/<namespace>/.
+    """Generate a unique temp path under /tmp/Dev10x/<namespace>/.
+
+    Files: returns a path WITHOUT creating the file by default so
+    callers using the Write tool don't trigger its overwrite gate
+    (GH-39). Pass create=True for legacy pre-created behavior.
+    Directories: always created (the directory is the resource).
 
     Args:
         namespace: Subdirectory under /tmp/Dev10x/ (e.g., "git", "skill-audit")
         prefix: Filename prefix (e.g., "commit-msg", "pr-review")
         ext: File extension including dot (e.g., ".txt", ".json"). Ignored for directories.
         directory: If True, create a directory instead of a file.
+        create: If True (and directory=False), pre-create an empty file.
+            Default False — Write callers should write fresh.
 
     Returns:
-        Dictionary with key: path (str) — the created temp file/directory path
+        Dictionary with key: path (str) — the temp file/directory path
     """
     from dev10x.mcp import utilities as util
 
-    return await util.mktmp(namespace=namespace, prefix=prefix, ext=ext, directory=directory)
+    return await util.mktmp(
+        namespace=namespace,
+        prefix=prefix,
+        ext=ext,
+        directory=directory,
+        create=create,
+    )
 
 
 # ── Plan/Task tools ────────────────────────────────────────────

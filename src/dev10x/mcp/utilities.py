@@ -18,10 +18,20 @@ async def mktmp(
     prefix: str,
     ext: str = "",
     directory: bool = False,
+    create: bool = False,
 ) -> dict[str, Any]:
+    """Generate a unique temp path under /tmp/Dev10x/<namespace>/.
+
+    By default returns a path without creating the file so callers
+    using the Write tool don't trigger its overwrite gate (GH-39).
+    Pass create=True to pre-create an empty file (legacy behavior).
+    Directories are always created (directory=True).
+    """
     mk_args: list[str] = []
     if directory:
         mk_args.append("-d")
+    elif create:
+        mk_args.append("--create")
     mk_args.extend([namespace, prefix])
     if ext and not directory:
         mk_args.append(ext)
