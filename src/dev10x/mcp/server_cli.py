@@ -25,7 +25,7 @@ async def detect_tracker(ticket_id: str) -> dict:
     Returns:
         Dictionary with keys: tracker, ticket_id, ticket_number, fixes_url
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.detect_tracker(ticket_id=ticket_id)).to_dict()
 
@@ -40,7 +40,7 @@ async def pr_detect(arg: str) -> dict:
     Returns:
         Dictionary with keys: pr_number, repo, branch, state, head_ref
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.pr_detect(arg=arg)).to_dict()
 
@@ -56,7 +56,7 @@ async def issue_get(number: int, repo: str | None = None) -> dict:
     Returns:
         Dictionary with keys: title, state, body, labels, linked_prs
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.issue_get(number=number, repo=repo)).to_dict()
 
@@ -72,7 +72,7 @@ async def issue_comments(number: int, repo: str | None = None) -> dict:
     Returns:
         Dictionary with key: comments (list of comment objects)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.issue_comments(number=number, repo=repo)).to_dict()
 
@@ -97,7 +97,7 @@ async def issue_create(
     Returns:
         Dictionary with keys: number, title, url
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.issue_create(
@@ -141,7 +141,7 @@ async def pr_comments(
     Returns:
         Dictionary with action results (comments list or operation status)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.pr_comments(
@@ -175,7 +175,7 @@ async def pr_comment_reply(
     Returns:
         Dictionary with reply details (id, body, created_at)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.pr_comment_reply(
@@ -209,7 +209,7 @@ async def minimize_comments(
         Dictionary with batched mutation results keyed as m0, m1, ...
         each containing minimizedComment { isMinimized, minimizedReason }
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.minimize_comments(
@@ -238,7 +238,7 @@ async def request_review(
     Returns:
         Dictionary with keys: requested_reviewers or requested_teams
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.request_review(
@@ -263,7 +263,7 @@ async def detect_base_branch(base: str | None = None, force: bool = False) -> di
     Returns:
         Dictionary with keys: base_branch (str), has_develop (bool)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.detect_base_branch(base=base, force=force)).to_dict()
 
@@ -278,7 +278,7 @@ async def verify_pr_state(force: bool = False) -> dict:
     Returns:
         Dictionary with keys: branch_name, issue, base_branch
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.verify_pr_state(force=force)).to_dict()
 
@@ -293,7 +293,7 @@ async def pre_pr_checks(base_branch: str | None = None) -> dict:
     Returns:
         Dictionary with keys: success (bool), output (str)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.pre_pr_checks(base_branch=base_branch)).to_dict()
 
@@ -318,7 +318,7 @@ async def create_pr(
     Returns:
         Dictionary with keys: pr_number (int), url (str)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.create_pr(
@@ -342,7 +342,7 @@ async def generate_commit_list(pr_number: int, base_branch: str | None = None) -
     Returns:
         Dictionary with key: commit_list (str)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.generate_commit_list(pr_number=pr_number, base_branch=base_branch)).to_dict()
 
@@ -358,7 +358,7 @@ async def post_summary_comment(issue_id: str, summary_text: str) -> dict:
     Returns:
         Dictionary with keys: success (bool), output (str)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.post_summary_comment(issue_id=issue_id, summary_text=summary_text)).to_dict()
 
@@ -393,7 +393,7 @@ async def pr_notify(
     Returns:
         Dictionary with PR info (prepare) or operation results (send)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.pr_notify(
@@ -634,7 +634,7 @@ async def resolve_review_thread(
     Returns:
         Dictionary with GraphQL mutation results per resolved thread
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (
         await gh.resolve_review_thread(
@@ -659,7 +659,7 @@ async def check_top_level_comments(
     Returns:
         Dictionary with keys: findings (list), count (int)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.check_top_level_comments(pr_number=pr_number, repo=repo)).to_dict()
 
@@ -678,7 +678,7 @@ async def unresolved_threads(
     Returns:
         Dictionary with keys: prs (list), count (int)
     """
-    from dev10x.mcp import github as gh
+    from dev10x import github as gh
 
     return (await gh.unresolved_threads(repo=repo, limit=limit)).to_dict()
 

@@ -9,7 +9,7 @@ import pytest
 from dev10x.domain.repository_ref import RepositoryRef
 from dev10x.domain.result import ErrorResult, SuccessResult, ok
 
-gh = pytest.importorskip("dev10x.mcp.github", reason="dev10x not installed")
+gh = pytest.importorskip("dev10x.github", reason="dev10x not installed")
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ class TestPrCommentsResolveSingle:
         )
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_resolves_single_comment(
         self,
         mock_api: AsyncMock,
@@ -71,7 +71,7 @@ class TestPrCommentsResolveSingle:
         assert mock_api.call_count == 2
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_converts_int_comment_id_to_string(
         self,
         mock_api: AsyncMock,
@@ -131,7 +131,7 @@ class TestPrCommentsResolveBatch:
         )
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_resolves_multiple_comments_in_two_calls(
         self,
         mock_api: AsyncMock,
@@ -157,7 +157,7 @@ class TestPrCommentsResolveBatch:
         assert "r2" in result.value["data"]
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_batch_query_uses_aliased_nodes(
         self,
         mock_api: AsyncMock,
@@ -180,7 +180,7 @@ class TestPrCommentsResolveBatch:
         assert "n2:" in query_str
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_comment_ids_takes_precedence_over_comment_id(
         self,
         mock_api: AsyncMock,
@@ -210,7 +210,7 @@ class TestPrCommentsResolveBatch:
 
 class TestPrCommentsResolveErrors:
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_returns_error_when_query_fails(
         self,
         mock_api: AsyncMock,
@@ -230,7 +230,7 @@ class TestPrCommentsResolveErrors:
         assert result.error == "GraphQL error"
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_returns_error_when_thread_not_found(
         self,
         mock_api: AsyncMock,
@@ -249,7 +249,7 @@ class TestPrCommentsResolveErrors:
         assert "Could not find thread" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_returns_error_when_thread_id_invalid(
         self,
         mock_api: AsyncMock,
@@ -270,7 +270,7 @@ class TestPrCommentsResolveErrors:
         assert "Could not find thread" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_partial_failure_includes_warnings(
         self,
         mock_api: AsyncMock,
@@ -304,7 +304,7 @@ class TestPrCommentsResolveErrors:
         assert any("PRRC_bad" in w for w in result.value["warnings"])
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_mutation_error_returns_error(
         self,
         mock_api: AsyncMock,
@@ -328,7 +328,7 @@ class TestPrCommentsResolveErrors:
 
 class TestResolveReviewThreadDirect:
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_resolves_by_thread_ids(
         self,
         mock_api: AsyncMock,
@@ -351,7 +351,7 @@ class TestResolveReviewThreadDirect:
         assert "must start with PRRT_" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_resolves_by_comment_ids(
         self,
         mock_api: AsyncMock,
@@ -383,7 +383,7 @@ class TestResolveReviewThreadDirect:
 
 class TestPrCommentListFilters:
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_filters_by_review_id(
         self,
         mock_api: AsyncMock,
@@ -409,7 +409,7 @@ class TestPrCommentListFilters:
         assert {c["id"] for c in result.value} == {1, 3}
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_returns_all_when_no_review_id(
         self,
         mock_api: AsyncMock,
@@ -430,7 +430,7 @@ class TestPrCommentListFilters:
         assert len(result.value) == 2
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_unresolved_only_uses_graphql(
         self,
         mock_api: AsyncMock,
@@ -524,7 +524,7 @@ class TestMinimizeComments:
         )
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_batches_into_single_request(
         self,
         mock_api: AsyncMock,
@@ -545,7 +545,7 @@ class TestMinimizeComments:
         assert "classifier: OUTDATED" in query
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_accepts_alternate_classifier(
         self,
         mock_api: AsyncMock,
@@ -581,7 +581,7 @@ class TestMinimizeComments:
         assert "Invalid classifier" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_returns_error_on_api_failure(
         self,
         mock_api: AsyncMock,
@@ -608,7 +608,7 @@ class TestResolveRepo:
 
 class TestPrCommentReply:
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_posts_reply(
         self,
         mock_api: AsyncMock,
@@ -632,7 +632,7 @@ class TestPrCommentReply:
         assert call_kwargs["fields"]["in_reply_to"] == 123
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_returns_error_on_api_failure(
         self,
         mock_api: AsyncMock,
@@ -652,7 +652,7 @@ class TestPrCommentReply:
         assert isinstance(result, ErrorResult)
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_coerces_numeric_string_comment_id_to_int(
         self,
         mock_api: AsyncMock,
@@ -670,7 +670,7 @@ class TestPrCommentReply:
         assert mock_api.call_args.kwargs["fields"]["in_reply_to"] == 3130499018
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_rejects_non_numeric_comment_id(
         self,
         mock_api: AsyncMock,
@@ -689,7 +689,7 @@ class TestPrCommentReply:
 
 class TestPrCommentsActionReply:
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_coerces_numeric_string_to_int(
         self,
         mock_api: AsyncMock,
@@ -725,7 +725,7 @@ class TestPrCommentsActionReply:
 
 class TestRequestReview:
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_requests_user_reviewers(
         self,
         mock_api: AsyncMock,
@@ -745,7 +745,7 @@ class TestRequestReview:
         assert fields["reviewers"] == ["alice"]
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_requests_team_reviewers(
         self,
         mock_api: AsyncMock,
@@ -779,7 +779,7 @@ class TestPrCommentsStrategyDispatch:
         assert "get, list, reply, resolve" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_get_action_requires_comment_id(
         self,
         mock_api: AsyncMock,
@@ -791,7 +791,7 @@ class TestPrCommentsStrategyDispatch:
         assert "comment_id required" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_list_action_requires_pr_number(
         self,
         mock_api: AsyncMock,
@@ -803,7 +803,7 @@ class TestPrCommentsStrategyDispatch:
         assert "pr_number required" in result.error
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_get_action_fetches_comment(
         self,
         mock_api: AsyncMock,
@@ -818,7 +818,7 @@ class TestPrCommentsStrategyDispatch:
         assert isinstance(result, SuccessResult)
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_list_action_fetches_comments(
         self,
         mock_api: AsyncMock,
@@ -833,7 +833,7 @@ class TestPrCommentsStrategyDispatch:
         assert isinstance(result, SuccessResult)
 
     @pytest.mark.asyncio
-    @patch("dev10x.mcp.github._gh_api", new_callable=AsyncMock)
+    @patch("dev10x.github._gh_api", new_callable=AsyncMock)
     async def test_reply_action_posts_comment(
         self,
         mock_api: AsyncMock,
