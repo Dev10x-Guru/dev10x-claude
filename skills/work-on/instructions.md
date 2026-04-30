@@ -1038,6 +1038,25 @@ The `skills:` field means "invoke these via `Skill()`", not
 session 05d49f11 were made because the enforcement was
 treated as optional. It is not optional.
 
+**Mode `prompt:` overrides preserve `skills:` delegation
+(GH-45):** A mode block (e.g., `solo-maintainer:`) that
+overrides a step's `subject:` or `prompt:` does NOT remove the
+step's `skills:` field. The skill delegation still applies —
+the override changes only the documented behavior the skill
+should adopt. The agent MUST invoke `Skill()` and let the skill
+read the active mode from `session.yaml` and apply the override
+internally. Taking the prompt override literally and running
+the raw command directly bypasses the skill's setup, validation,
+and side effects.
+
+**Anti-pattern (GH-45):** Step subject "Mark PR ready for
+review" with `skills: [Dev10x:gh-pr-request-review]` and
+`solo-maintainer` mode override `prompt: "Run gh pr ready. No
+reviewers, no Slack."` Agent reads the prompt, runs `gh pr
+ready 37` directly, never invokes the skill. Correct behavior:
+invoke `Skill(Dev10x:gh-pr-request-review)`; the skill checks
+`active_modes` and runs the solo-maintainer code path itself.
+
 Common skill delegations:
 
 | Task | Delegated to |
