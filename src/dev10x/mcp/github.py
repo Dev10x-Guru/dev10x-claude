@@ -14,7 +14,7 @@ from typing import Any
 
 from dev10x.domain.repository_ref import RepositoryRef
 from dev10x.domain.result import ErrorResult, Result, err, ok
-from dev10x.mcp.subprocess_utils import (
+from dev10x.subprocess_utils import (
     async_run,
     async_run_script,
     parse_key_value_output,

@@ -11,7 +11,7 @@ from typing import Any
 
 
 def get_plugin_root() -> Path:
-    return Path(__file__).parents[3]
+    return Path(__file__).parents[2]
 
 
 def _matches_plugin_root(candidate: Path) -> bool:
