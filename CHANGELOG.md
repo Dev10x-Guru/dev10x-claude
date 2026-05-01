@@ -3,6 +3,200 @@
 All notable changes to the Dev10x Claude Code Plugin are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 0.69.0 — Permission Friction & Audit Empiricism
+
+Released 2026-05-01
+
+### Features
+
+- **Enable empirical investigation of permission rule shapes** —
+  audit tooling captures real-world permission rule patterns so
+  prefix-friction diagnostics rest on observed behavior instead
+  of assumptions ([GH-47])
+- **Emit per-skill Read rules with `~/` + `/home` twins** —
+  `plugin-maintenance` writes both expansions so Read rules match
+  regardless of which form Claude resolves at allow-check time
+  ([GH-48])
+- **Detect Write-overwrite, workspace, and exit-code friction in
+  audit** — three new diagnostics surface common permission
+  prompt causes that previously slipped past audit reports
+  ([GH-46])
+- **Prefer working-dir scripts when CWD is plugin source** —
+  hooks and skills resolve script paths to the active checkout
+  rather than the installed plugin, so local edits take effect
+  immediately ([GH-42])
+- **Register `/tmp/Dev10x` workspace via `plugin-maintenance`
+  bootstrap** — first-run setup adds the workspace allow rule so
+  `mktmp` and friends stop prompting on fresh installs ([GH-40])
+- **Stop pre-creating files in `mktmp` to avoid Write-overwrite
+  prompt** — the MCP tool returns a fresh path without touching
+  it, so the first Write call no longer trips the overwrite gate
+  ([GH-39])
+- **Expose audit-wrap log discovery via MCP tools** —
+  `audit_hook_log_path` and `audit_hook_recent` let skills query
+  hook timing data without shelling out ([GH-29])
+- **Add PoC option to `ticket-scope` approval gate** — scoping a
+  proof-of-concept ticket no longer forces the full template
+  treatment ([GH-33])
+- **Auto-detect Slack state to skip redundant prompts** —
+  `slack-review-request` checks for an existing token before
+  prompting, smoothing the request-review flow ([GH-19])
+
+### Fixes
+
+- **Fix Server Tests workflow path** — the CI path filter now
+  matches the relocated MCP server module ([GH-9])
+- **Use REST API for PR body updates to avoid Projects-classic
+  exit 1** — `gh-pr-create` update mode bypasses a `gh` GraphQL
+  failure on repos still attached to classic projects ([GH-41])
+- **Resolve pre-existing mypy errors in MCP github and hook
+  audit** — strict typing passes again after the GitHub-domain
+  lift
+- **Scope pre-PR mypy invocation to `src/`** — match
+  `pyproject.toml` so the pre-PR check stops scanning unrelated
+  trees
+
+### Refactors
+
+- **Lift the GitHub domain into a top-level package** — MCP
+  GitHub helpers move out of the server-internal namespace so
+  CLI tools and tests can share them ([GH-9])
+- **Lift simple MCP domains into top-level packages** —
+  cohesive single-purpose MCP modules become standalone packages
+  for easier reuse ([GH-9])
+- **Reuse subprocess utilities outside the MCP layer** — the
+  shared subprocess helper graduates out of `mcp/` so audit and
+  CLI consumers stop duplicating it ([GH-9])
+- **Enforce template selection in `ticket-scope` Phase 5.1** —
+  skill body blocks free-text drift through the template gate
+  ([GH-28])
+- **Enforce `jtbd` delegation in `ticket-scope` Phase 4b** —
+  Job Story drafting routes through the dedicated skill
+  ([GH-27])
+- **Enforce `instructions.md` read at `ticket-scope` startup** —
+  body content loads explicitly so phase logic is visible to the
+  agent ([GH-26])
+- **Preserve hook guardrails outside split-rebase docs** —
+  `git-commit-split` references hook rules instead of redefining
+  them ([GH-15])
+- **Enable consistent coverage gates in skill scripts** — every
+  skill script enforces the same coverage threshold ([GH-13])
+- **Route raw `git` CLI in skill bodies through wrappers** —
+  skills call the safe-rebase / safe-push wrappers instead of
+  raw `git` so guardrails stay in force ([GH-14])
+
+### Documentation
+
+- **Document fanout-parallel hook propagation surprises** —
+  parent hooks may not run inside fanout children; the rule lives
+  next to the skill ([GH-32])
+- **Document fanout-parallel cold-load budget floor** — children
+  pay a fixed cold-load cost, so fanout below the floor is
+  slower than serial ([GH-31])
+- **Document `--bare` strips OAuth in fanout-parallel children**
+  — bare clones lose token auth, breaking `gh` calls inside
+  fanout children ([GH-30])
+- **Clarify mode prompt overrides preserve skills delegation** —
+  override examples no longer suggest dropping skill calls
+  ([GH-45])
+- **Forbid skill partial-read downgrade in `work-on`** — the
+  skill always reads the full body to keep orchestration
+  contracts intact ([GH-44])
+- **Enforce `gh-pr-respond` for all PR review comments** —
+  responding directly via `gh` bypasses validation gates
+  ([GH-43])
+
+### Polish
+
+- **Modernize `Result` generics with PEP 695 syntax**
+- **Wrap long literal strings in `src/dev10x` and tests**
+- **Resolve `RuleEngine F821` in `edit_validator` hook**
+- **Sort imports in `skill-audit` script entry points**
+- **Remove dead test variables and rename ambiguous loop var**
+
+[GH-1]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/1
+[GH-9]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/9
+[GH-13]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/13
+[GH-14]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/14
+[GH-15]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/15
+[GH-19]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/19
+[GH-26]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/26
+[GH-27]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/27
+[GH-28]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/28
+[GH-29]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/29
+[GH-30]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/30
+[GH-31]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/31
+[GH-32]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/32
+[GH-33]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/33
+[GH-39]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/39
+[GH-40]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/40
+[GH-41]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/41
+[GH-42]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/42
+[GH-43]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/43
+[GH-44]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/44
+[GH-45]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/45
+[GH-46]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/46
+[GH-47]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/47
+[GH-48]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/48
+
+## 0.68.0 — First-Run Setup & PR-Skill Hardening
+
+Released 2026-04-29
+
+### Features
+
+- **Streamline first-run permission setup** — bootstrap walks new
+  users through the minimum permission set so the plugin works
+  without per-tool prompting on day one ([GH-1])
+- **Detect raw CLI in skill docs to prevent MCP/Skill bypass** —
+  reviewer surfaces `gh`/`git` shell-outs in skill bodies that
+  should route through MCP tools or sibling skills ([GH-5])
+- **Eliminate per-invocation permission prompts in 18 skills** —
+  audit-driven sweep adds the missing `allowed-tools` entries so
+  these skills run without approval friction ([GH-11])
+- **Allow scoped `pr_comments` listings on heavily reviewed PRs**
+  — pagination + filtering avoid response-size limits on PRs with
+  hundreds of threads ([GH-997])
+- **Enable batched comment hiding via single GraphQL mutation** —
+  one round-trip hides many comments instead of N requests
+  ([GH-987])
+- **Enable bootstrap coverage for uv/yq/git/gh patterns** —
+  bootstrap allow rules cover the toolchain seen across skills
+  out of the box ([GH-20])
+
+### Fixes
+
+- **Halt PR creation when pre-PR checks fail** — `gh-pr-create`
+  no longer pushes a draft PR when type-check or test gates
+  failed ([GH-998])
+- **Enforce ticket-create haiku dispatch and tracker fast-fail**
+  — tracker mismatches surface immediately and ticket creation
+  uses the right model tier ([GH-998])
+- **Enforce slack-review-request prepare script use** — Slack
+  notifications go through the prepared script so token handling
+  stays consistent ([GH-998])
+- **Allow numeric-string comment IDs on `pr_comment` reply** —
+  reply tool accepts both forms returned by upstream APIs
+  ([GH-995])
+
+### Refactors
+
+- **Eliminate raw `gh` CLI in PR-skill bodies** — PR skills route
+  through MCP wrappers, fixing audit findings and removing the
+  raw-CLI bypass ([GH-12])
+- **Guard `request-review` against approved PR pings** — already-
+  approved PRs no longer ping reviewers redundantly ([GH-993])
+
+[GH-987]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/987
+[GH-993]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/993
+[GH-995]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/995
+[GH-997]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/997
+[GH-998]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/998
+[GH-5]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/5
+[GH-11]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/11
+[GH-12]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/12
+[GH-20]: https://github.com/Dev10x-Guru/Dev10x-Claude/issues/20
+
 ## 0.67.0 — Maintenance & Repository History Pruning
 
 Released 2026-04-26
