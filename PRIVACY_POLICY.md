@@ -46,6 +46,10 @@ Audit collection can be disabled by exporting
   calls other than those you explicitly invoke (for example,
   `git push`, `gh pr create`, or an authenticated MCP tool
   request).
+- Some **skill scripts** (e.g., `qa-self/upload-screenshots.py`)
+  call documented integrations directly via HTTP libraries when
+  you invoke the skill. The targeted services are listed in the
+  table below; no other outbound calls are made.
 
 ## Third-party integrations
 
@@ -61,6 +65,9 @@ with credentials you supply:
 | Slack (MCP) | Your Slack app token | Channel reads and messages you post |
 | Sentry (MCP) | Your Sentry auth | Issue details you fetch |
 | AWS Secrets Manager (`aws-vault`) | Your AWS profile | Secret lookups you approve |
+| Postgres (databases via `Dev10x:db-psql`) | Connection strings from `databases.yaml` (env or keyring) | Read-only SQL queries you submit; results returned locally |
+| Anthropic API (Claude review CI) | Repository `ANTHROPIC_API_KEY` secret | PR diffs, commit metadata, and review comments processed by GitHub-hosted Claude actions |
+| PyPI (release CI only) | Trusted-publisher OIDC | Plugin distribution artifacts |
 
 Each integration is governed by the upstream vendor's own
 privacy policy.
