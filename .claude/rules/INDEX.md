@@ -53,6 +53,7 @@ The code review system uses a **multi-agent architecture**:
 | `.claude/rules/hook-patterns.md` | When editing `hooks/**` with dual implementations | Python-shell hook equivalence |
 | `.claude/rules/performance.md` | Reference: post-dependency change monitoring | CLI startup baseline, profiling instructions |
 | `.claude/rules/skill-body-extraction.md` | When editing `skills/**` | SKILL.md body extraction pattern, token reduction |
+| `.claude/rules/agent-body-extraction.md` | When editing `agents/**` | Agent spec body extraction pattern, token reduction |
 | `references/*.md` | On-demand by skills/CI | Detailed git, review, JTBD guides |
 
 ## Loading Order
