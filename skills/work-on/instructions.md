@@ -188,10 +188,19 @@ it affects Phase 3 planning.
 | Local-only (free text) | Deferred | Decided in Phase 4 |
 | Investigation only | No | No code changes expected |
 
-**Detect current workspace state** using git directly:
+**Detect current workspace state** via `Dev10x:gh-context` (GH-55 F5):
+
+Call `Skill(Dev10x:gh-context)` and read `worktree`, `current_branch`
+from the response. The skill encapsulates the `.git`-file-vs-directory
+check and branch lookup; calling raw `git symbolic-ref` /
+`git status` here triggers permission friction (chained shell
+patterns, `git -C` rejection) that the wrapper avoids.
+
+Fallback (only when `Dev10x:gh-context` is unavailable):
 - If `.git` is a **file** (not directory) → worktree
 - If `.git` is a **directory** → main repo
-- Current branch: `git symbolic-ref --short HEAD`
+- Current branch: `git symbolic-ref --short HEAD` (single command,
+  no chaining)
 
 **Worktree branch check:** If the CWD is a worktree and the
 current branch is a generic worktree branch (e.g., `wt/<name>`
@@ -211,11 +220,18 @@ can include or skip the workspace setup subtask.
 
 ### Self-Check Before Phase 2
 
-**REQUIRED:** Before proceeding to Phase 2, call `TaskList` and
-verify that all 4 phase tasks exist. If they are missing, create
-them NOW before proceeding. If `TaskCreate` is unavailable (e.g.,
+**REQUIRED — call `TaskList` now (GH-55 F2).** This is not an
+admonition you can skip "because the tasks were obviously
+created"; the explicit `TaskList` call is the audit trail. After
+calling it, verify exactly 4 phase parents (Phase 1 through
+Phase 4) exist. If fewer than 4 are present, create the missing
+ones before proceeding. If `TaskCreate` is unavailable (e.g.,
 `ToolSearch` returned it but calling fails), STOP and inform the
 user — do NOT proceed without the task list.
+
+**Anti-pattern (GH-729, GH-928, GH-55 F2):** Skipping the
+`TaskList` call because "I just created the tasks one tool-call
+ago" is exactly the regression the audit caught. Run it.
 
 ---
 
@@ -237,8 +253,10 @@ Dispatch) for the full pattern.
 
 ### Subtask Creation
 
-Before dispatching, create one subtask per source under the
-Phase 2 parent task:
+**REQUIRED before any `Agent(...)` dispatch (GH-55 F3).** Create
+one subtask per source under the Phase 2 parent. The subtasks are
+the supervisor's view of in-flight fetches; if you skip them, the
+parent shows "in progress" with no breakdown of what is running.
 
 ```
 TaskCreate(subject="Fetch linear-ticket DEV-42",
@@ -272,6 +290,15 @@ Choose the agent type based on the source's tool requirements:
 lack access to Bash, MCP tools, and `WebFetch`. Since `gh` CLI
 requires Bash and Linear/Slack/Sentry require MCP tools, all
 source fetches must use `general-purpose` agents.
+
+**Anti-pattern (PROHIBITED, GH-55 F1):**
+```
+Agent(subagent_type=Explore, description="Fetch GH-N", ...)
+```
+This pattern caused a regression where the agent had to be
+interrupted by the user and redirected via
+`/Dev10x:skill-reinforcement` mid-Phase 2. Source fetch agents
+need Bash + MCP — Explore is only for read-only filesystem search.
 
 ```
 # Single tool-call block — all launch concurrently
