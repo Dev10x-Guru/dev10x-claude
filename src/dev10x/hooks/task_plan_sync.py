@@ -18,11 +18,12 @@ from typing import Any
 from dev10x.domain.git_context import GitContext
 from dev10x.domain.plan import Plan
 
-_git = GitContext()
-
 
 def get_toplevel() -> str | None:
-    return _git.toplevel
+    # GH-979: Fresh GitContext per call so the MCP server (long-lived
+    # process) sees the caller's effective CWD on every invocation
+    # instead of caching the directory the first call happened to hit.
+    return GitContext().toplevel
 
 
 def get_plan_path(*, toplevel: str) -> Path:
