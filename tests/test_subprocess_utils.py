@@ -268,3 +268,173 @@ class TestAsyncRunScript:
 
         assert result.returncode == 0
         assert result.stdout.strip().startswith("/tmp/")
+
+
+class TestEffectiveCwd:
+    """GH-979: subprocess calls must honor the per-call effective CWD."""
+
+    @pytest.fixture
+    def two_repos(self, tmp_path: Path) -> tuple[Path, Path]:
+        main = tmp_path / "main"
+        worktree = tmp_path / "wt"
+        for d in (main, worktree):
+            d.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=d, check=True)
+            (d / "marker.txt").write_text(d.name)
+            subprocess.run(["git", "add", "."], cwd=d, check=True)
+            subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "user.email=t@t",
+                    "-c",
+                    "user.name=T",
+                    "commit",
+                    "-qm",
+                    f"init {d.name}",
+                ],
+                cwd=d,
+                check=True,
+            )
+            subprocess.run(["git", "checkout", "-qb", f"{d.name}-branch"], cwd=d, check=True)
+        return main, worktree
+
+    @pytest.mark.asyncio
+    async def test_async_run_explicit_cwd_overrides_process_cwd(
+        self,
+        two_repos: tuple[Path, Path],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from dev10x.subprocess_utils import async_run
+
+        main, worktree = two_repos
+        monkeypatch.chdir(main)
+
+        result = await async_run(
+            args=["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=str(worktree),
+        )
+
+        assert result.stdout.strip() == "wt-branch"
+
+    @pytest.mark.asyncio
+    async def test_async_run_uses_context_var_when_cwd_omitted(
+        self,
+        two_repos: tuple[Path, Path],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from dev10x.subprocess_utils import async_run, use_cwd
+
+        main, worktree = two_repos
+        monkeypatch.chdir(main)
+
+        with use_cwd(str(worktree)):
+            result = await async_run(args=["git", "rev-parse", "--abbrev-ref", "HEAD"])
+
+        assert result.stdout.strip() == "wt-branch"
+
+    @pytest.mark.asyncio
+    async def test_use_cwd_does_not_leak_after_block(
+        self,
+        two_repos: tuple[Path, Path],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from dev10x.subprocess_utils import async_run, effective_cwd, use_cwd
+
+        main, worktree = two_repos
+        monkeypatch.chdir(main)
+
+        with use_cwd(str(worktree)):
+            assert effective_cwd() == str(worktree)
+
+        assert effective_cwd() is None
+
+        result = await async_run(args=["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        assert result.stdout.strip() == "main-branch"
+
+    def test_use_cwd_with_none_is_a_noop(self) -> None:
+        from dev10x.subprocess_utils import effective_cwd, use_cwd
+
+        with use_cwd("/some/path"):
+            with use_cwd(None):
+                assert effective_cwd() == "/some/path"
+
+    def test_run_script_passes_cwd_to_subprocess(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        from dev10x.subprocess_utils import run_script
+
+        with patch("dev10x.subprocess_utils.subprocess.run") as mock_run:
+            mock_run.return_value = subprocess.CompletedProcess(
+                args=[], returncode=0, stdout="", stderr=""
+            )
+            run_script("bin/mktmp.sh", "x", "y", cwd=str(tmp_path))
+
+        assert mock_run.call_args[1]["cwd"] == str(tmp_path)
+
+
+class TestGitContextHonorsCwd:
+    """GH-979: GitContext must not lock in the first CWD it sees."""
+
+    @pytest.fixture
+    def two_repos(self, tmp_path: Path) -> tuple[Path, Path]:
+        a = tmp_path / "a"
+        b = tmp_path / "b"
+        for d in (a, b):
+            d.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=d, check=True)
+            (d / "f.txt").write_text(d.name)
+            subprocess.run(["git", "add", "."], cwd=d, check=True)
+            subprocess.run(
+                ["git", "-c", "user.email=t@t", "-c", "user.name=T", "commit", "-qm", "init"],
+                cwd=d,
+                check=True,
+            )
+        return a, b
+
+    def test_explicit_cwd_overrides_process_cwd(
+        self,
+        two_repos: tuple[Path, Path],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from dev10x.domain.git_context import GitContext
+
+        a, b = two_repos
+        monkeypatch.chdir(a)
+
+        ctx = GitContext(cwd=str(b))
+
+        # Resolve symlinks (macOS /var → /private/var) before comparing
+        assert Path(ctx.toplevel).resolve() == b.resolve()
+
+    def test_fresh_instances_do_not_share_cache(
+        self,
+        two_repos: tuple[Path, Path],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from dev10x.domain.git_context import GitContext
+
+        a, b = two_repos
+        monkeypatch.chdir(a)
+        first = GitContext()
+        assert Path(first.toplevel).resolve() == a.resolve()
+
+        monkeypatch.chdir(b)
+        second = GitContext()
+        assert Path(second.toplevel).resolve() == b.resolve()
+
+    def test_context_var_drives_default_cwd(
+        self,
+        two_repos: tuple[Path, Path],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from dev10x.domain.git_context import GitContext
+        from dev10x.subprocess_utils import use_cwd
+
+        a, b = two_repos
+        monkeypatch.chdir(a)
+
+        with use_cwd(str(b)):
+            ctx = GitContext()
+            assert Path(ctx.toplevel).resolve() == b.resolve()

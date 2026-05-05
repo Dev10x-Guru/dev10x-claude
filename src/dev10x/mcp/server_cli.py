@@ -11,70 +11,90 @@ from mcp.server.fastmcp import FastMCP
 
 server = FastMCP(name="Dev10x-cli")
 
+# GH-979: every CWD-sensitive tool accepts an optional `cwd` argument.
+# Skills must pass the session's effective working directory (e.g. the
+# worktree path after EnterWorktree) so subprocess_utils binds it via
+# the `_effective_cwd` ContextVar before any git/gh subprocess fires.
+# When `cwd` is None, behavior is unchanged from pre-GH-979 (subprocess
+# inherits the MCP server's startup CWD).
+
 
 # ── GitHub tools ────────────────────────────────────────────────
 
 
 @server.tool()
-async def detect_tracker(ticket_id: str) -> dict:
+async def detect_tracker(ticket_id: str, cwd: str | None = None) -> dict:
     """Detect issue tracker type from a ticket ID.
 
     Args:
         ticket_id: Ticket identifier (e.g., GH-15, TEAM-133, JIRA-42)
+        cwd: Effective working directory for git/gh subprocess calls.
+            Pass the session's worktree path after EnterWorktree (GH-979).
 
     Returns:
         Dictionary with keys: tracker, ticket_id, ticket_number, fixes_url
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.detect_tracker(ticket_id=ticket_id)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.detect_tracker(ticket_id=ticket_id)).to_dict()
 
 
 @server.tool()
-async def pr_detect(arg: str) -> dict:
+async def pr_detect(arg: str, cwd: str | None = None) -> dict:
     """Detect PR context from a PR number, URL, or branch name.
 
     Args:
         arg: PR number (#123), full URL, or branch name
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: pr_number, repo, branch, state, head_ref
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.pr_detect(arg=arg)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.pr_detect(arg=arg)).to_dict()
 
 
 @server.tool()
-async def issue_get(number: int, repo: str | None = None) -> dict:
+async def issue_get(number: int, repo: str | None = None, cwd: str | None = None) -> dict:
     """Get GitHub issue details.
 
     Args:
         number: Issue number
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: title, state, body, labels, linked_prs
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.issue_get(number=number, repo=repo)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.issue_get(number=number, repo=repo)).to_dict()
 
 
 @server.tool()
-async def issue_comments(number: int, repo: str | None = None) -> dict:
+async def issue_comments(number: int, repo: str | None = None, cwd: str | None = None) -> dict:
     """Get GitHub issue comments.
 
     Args:
         number: Issue number
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with key: comments (list of comment objects)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.issue_comments(number=number, repo=repo)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.issue_comments(number=number, repo=repo)).to_dict()
 
 
 @server.tool()
@@ -84,6 +104,7 @@ async def issue_create(
     labels: list[str] | None = None,
     milestone: str | None = None,
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Create a GitHub issue.
 
@@ -93,21 +114,24 @@ async def issue_create(
         labels: List of label names to apply (optional)
         milestone: Milestone title to assign (optional)
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: number, title, url
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.issue_create(
-            title=title,
-            body=body,
-            labels=labels,
-            milestone=milestone,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.issue_create(
+                title=title,
+                body=body,
+                labels=labels,
+                milestone=milestone,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
@@ -120,6 +144,7 @@ async def pr_comments(
     review_id: int | None = None,
     unresolved_only: bool = False,
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Manage GitHub PR review comments and threads.
 
@@ -137,24 +162,27 @@ async def pr_comments(
             GraphQL reviewThreads query and return only the root
             comments of unresolved threads.
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with action results (comments list or operation status)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.pr_comments(
-            action=action,
-            pr_number=pr_number,
-            comment_id=comment_id,
-            comment_ids=comment_ids,
-            body=body,
-            review_id=review_id,
-            unresolved_only=unresolved_only,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.pr_comments(
+                action=action,
+                pr_number=pr_number,
+                comment_id=comment_id,
+                comment_ids=comment_ids,
+                body=body,
+                review_id=review_id,
+                unresolved_only=unresolved_only,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
@@ -163,6 +191,7 @@ async def pr_comment_reply(
     comment_id: int,
     body: str,
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Reply to a PR review comment thread.
 
@@ -171,20 +200,23 @@ async def pr_comment_reply(
         comment_id: Root comment ID to reply to
         body: Reply text (supports markdown)
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with reply details (id, body, created_at)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.pr_comment_reply(
-            pr_number=pr_number,
-            comment_id=comment_id,
-            body=body,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.pr_comment_reply(
+                pr_number=pr_number,
+                comment_id=comment_id,
+                body=body,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
@@ -192,6 +224,7 @@ async def minimize_comments(
     node_ids: list[str],
     classifier: str = "OUTDATED",
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Minimize (hide) one or more PR review comments via batched GraphQL.
 
@@ -204,20 +237,23 @@ async def minimize_comments(
         classifier: Reason category. One of: ABUSE, DUPLICATE,
             OFF_TOPIC, OUTDATED (default), RESOLVED, SPAM
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with batched mutation results keyed as m0, m1, ...
         each containing minimizedComment { isMinimized, minimizedReason }
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.minimize_comments(
-            node_ids=node_ids,
-            classifier=classifier,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.minimize_comments(
+                node_ids=node_ids,
+                classifier=classifier,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
@@ -226,6 +262,7 @@ async def request_review(
     reviewers: list[str],
     team: bool | None = None,
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Request review on a GitHub PR from users or teams.
 
@@ -234,24 +271,31 @@ async def request_review(
         reviewers: List of reviewer usernames or team names
         team: Whether reviewers are teams (vs users)
         repo: Repository (owner/repo). If omitted, uses current repo
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: requested_reviewers or requested_teams
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.request_review(
-            pr_number=pr_number,
-            reviewers=reviewers,
-            team=team,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.request_review(
+                pr_number=pr_number,
+                reviewers=reviewers,
+                team=team,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
-async def detect_base_branch(base: str | None = None, force: bool = False) -> dict:
+async def detect_base_branch(
+    base: str | None = None,
+    force: bool = False,
+    cwd: str | None = None,
+) -> dict:
     """Detect the correct base branch for PRs in the current repository.
 
     Prefers develop/development, falls back to main/master/trunk.
@@ -259,43 +303,54 @@ async def detect_base_branch(base: str | None = None, force: bool = False) -> di
     Args:
         base: Explicit base branch override
         force: Skip warning when overriding to non-development base
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: base_branch (str), has_develop (bool)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.detect_base_branch(base=base, force=force)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.detect_base_branch(base=base, force=force)).to_dict()
 
 
 @server.tool()
-async def verify_pr_state(force: bool = False) -> dict:
+async def verify_pr_state(force: bool = False, cwd: str | None = None) -> dict:
     """Verify branch state before creating a PR.
 
     Args:
         force: Allow targeting a non-development base branch
+        cwd: Effective working directory (GH-979). Pass the worktree
+            path after EnterWorktree so branch detection reads the
+            worktree's HEAD, not the main repo's.
 
     Returns:
         Dictionary with keys: branch_name, issue, base_branch
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.verify_pr_state(force=force)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.verify_pr_state(force=force)).to_dict()
 
 
 @server.tool()
-async def pre_pr_checks(base_branch: str | None = None) -> dict:
+async def pre_pr_checks(base_branch: str | None = None, cwd: str | None = None) -> dict:
     """Run pre-PR quality checks (ruff, mypy, pytest).
 
     Args:
         base_branch: Base branch for diff comparison. Auto-detected if omitted.
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), output (str)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.pre_pr_checks(base_branch=base_branch)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.pre_pr_checks(base_branch=base_branch)).to_dict()
 
 
 @server.tool()
@@ -305,6 +360,7 @@ async def create_pr(
     issue_id: str,
     fixes_url: str | None = None,
     base_branch: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Create a draft PR with two-pass body generation.
 
@@ -314,21 +370,26 @@ async def create_pr(
         issue_id: Ticket ID extracted from branch name
         fixes_url: Issue URL for the Fixes: line
         base_branch: Base branch. Auto-detected if omitted.
+        cwd: Effective working directory (GH-979). Pass the worktree
+            path after EnterWorktree so the PR is created from the
+            worktree's branch, not the main repo's.
 
     Returns:
         Dictionary with keys: pr_number (int), url (str)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.create_pr(
-            title=title,
-            job_story=job_story,
-            issue_id=issue_id,
-            fixes_url=fixes_url,
-            base_branch=base_branch,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.create_pr(
+                title=title,
+                job_story=job_story,
+                issue_id=issue_id,
+                fixes_url=fixes_url,
+                base_branch=base_branch,
+            )
+        ).to_dict()
 
 
 @server.tool()
@@ -338,6 +399,7 @@ async def update_pr(
     title: str | None = None,
     base_branch: str | None = None,
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Update an existing PR's body, title, or base branch.
 
@@ -353,52 +415,74 @@ async def update_pr(
 
     At least one of body, title, or base_branch is required.
 
+    `cwd` selects the effective working directory (GH-979).
+
     Returns:
         Dictionary with keys: pr_number (int), url (str)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.update_pr(
-            pr_number=pr_number,
-            body=body,
-            title=title,
-            base_branch=base_branch,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.update_pr(
+                pr_number=pr_number,
+                body=body,
+                title=title,
+                base_branch=base_branch,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
-async def generate_commit_list(pr_number: int, base_branch: str | None = None) -> dict:
+async def generate_commit_list(
+    pr_number: int,
+    base_branch: str | None = None,
+    cwd: str | None = None,
+) -> dict:
     """Generate a linked commit list for a PR body.
 
     Args:
         pr_number: PR number for commit links
         base_branch: Base branch. Auto-detected if omitted.
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with key: commit_list (str)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.generate_commit_list(pr_number=pr_number, base_branch=base_branch)).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.generate_commit_list(pr_number=pr_number, base_branch=base_branch)
+        ).to_dict()
 
 
 @server.tool()
-async def post_summary_comment(issue_id: str, summary_text: str) -> dict:
+async def post_summary_comment(
+    issue_id: str,
+    summary_text: str,
+    cwd: str | None = None,
+) -> dict:
     """Post summary + checklist as first PR comment.
 
     Args:
         issue_id: Ticket ID for checklist substitution
         summary_text: Markdown bullet points (one per line)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), output (str)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.post_summary_comment(issue_id=issue_id, summary_text=summary_text)).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.post_summary_comment(issue_id=issue_id, summary_text=summary_text)
+        ).to_dict()
 
 
 @server.tool()
@@ -413,6 +497,7 @@ async def pr_notify(
     skip_slack: bool = False,
     skip_reviewers: bool = False,
     skip_checklist: bool = False,
+    cwd: str | None = None,
 ) -> dict:
     """PR notification helper for review requests.
 
@@ -427,61 +512,76 @@ async def pr_notify(
         skip_slack: Skip Slack notification (send only)
         skip_reviewers: Skip reviewer assignment (send only)
         skip_checklist: Skip checklist update (send only)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with PR info (prepare) or operation results (send)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.pr_notify(
-            pr_number=pr_number,
-            repo=repo,
-            action=action,
-            channel=channel,
-            message=message,
-            message_file=message_file,
-            reviewer=reviewer,
-            skip_slack=skip_slack,
-            skip_reviewers=skip_reviewers,
-            skip_checklist=skip_checklist,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.pr_notify(
+                pr_number=pr_number,
+                repo=repo,
+                action=action,
+                channel=channel,
+                message=message,
+                message_file=message_file,
+                reviewer=reviewer,
+                skip_slack=skip_slack,
+                skip_reviewers=skip_reviewers,
+                skip_checklist=skip_checklist,
+            )
+        ).to_dict()
 
 
 # ── Git tools ───────────────────────────────────────────────────
 
 
 @server.tool()
-async def push_safe(args: list[str], protected_branches: list[str] | None = None) -> dict:
+async def push_safe(
+    args: list[str],
+    protected_branches: list[str] | None = None,
+    cwd: str | None = None,
+) -> dict:
     """Safely push git branches with protection for main/develop.
 
     Args:
         args: Arguments to pass to git push (e.g., ["origin", "branch-name"])
         protected_branches: List of branch names to protect (default: main, develop)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), branch, remote, blocked_reason (if blocked)
     """
     from dev10x import git as git_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await git_tools.push_safe(args=args, protected_branches=protected_branches)).to_dict()
+    with use_cwd(cwd):
+        return (
+            await git_tools.push_safe(args=args, protected_branches=protected_branches)
+        ).to_dict()
 
 
 @server.tool()
-async def rebase_groom(seq_path: str, base_ref: str) -> dict:
+async def rebase_groom(seq_path: str, base_ref: str, cwd: str | None = None) -> dict:
     """Rebase and groom commits using an interactive sequence file.
 
     Args:
         seq_path: Path to git rebase sequence file
         base_ref: Base ref to rebase onto (e.g., develop, main)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), commits_rewritten (int)
     """
     from dev10x import git as git_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await git_tools.rebase_groom(seq_path=seq_path, base_ref=base_ref)).to_dict()
+    with use_cwd(cwd):
+        return (await git_tools.rebase_groom(seq_path=seq_path, base_ref=base_ref)).to_dict()
 
 
 @server.tool()
@@ -489,6 +589,7 @@ async def create_worktree(
     branch: str,
     base: str | None = None,
     path: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Create a new git worktree.
 
@@ -496,61 +597,79 @@ async def create_worktree(
         branch: Branch name for the worktree
         base: Base ref to create from (default: develop)
         path: Worktree path (default: ../.worktrees/{project}-NN)
+        cwd: Effective working directory (GH-979). The new worktree
+            is added relative to this repo.
 
     Returns:
         Dictionary with keys: worktree_path, branch, created (bool)
     """
     from dev10x import git as git_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await git_tools.create_worktree(branch=branch, base=base, path=path)).to_dict()
+    with use_cwd(cwd):
+        return (await git_tools.create_worktree(branch=branch, base=base, path=path)).to_dict()
 
 
 @server.tool()
-async def mass_rewrite(config_path: str) -> dict:
+async def mass_rewrite(config_path: str, cwd: str | None = None) -> dict:
     """Rewrite multiple commit messages in one unattended rebase pass.
 
     Args:
         config_path: Path to JSON config file with rewrite instructions.
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), output (str), error (str if failed)
     """
     from dev10x import git as git_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await git_tools.mass_rewrite(config_path=config_path)).to_dict()
+    with use_cwd(cwd):
+        return (await git_tools.mass_rewrite(config_path=config_path)).to_dict()
 
 
 @server.tool()
-async def start_split_rebase(commit_hash: str, base_branch: str = "develop") -> dict:
+async def start_split_rebase(
+    commit_hash: str,
+    base_branch: str = "develop",
+    cwd: str | None = None,
+) -> dict:
     """Start an interactive rebase to split a commit.
 
     Args:
         commit_hash: The commit hash to split
         base_branch: Base branch for the rebase (default: develop)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), output (str), error (str if failed)
     """
     from dev10x import git as git_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await git_tools.start_split_rebase(commit_hash=commit_hash, base_branch=base_branch)
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await git_tools.start_split_rebase(commit_hash=commit_hash, base_branch=base_branch)
+        ).to_dict()
 
 
 @server.tool()
-async def next_worktree_name(base_dir: str | None = None) -> dict:
+async def next_worktree_name(base_dir: str | None = None, cwd: str | None = None) -> dict:
     """Calculate the next available worktree path.
 
     Args:
         base_dir: Override worktrees parent directory (default: ../.worktrees)
+        cwd: Effective working directory (GH-979). The .worktrees parent
+            is computed relative to this repo when base_dir is omitted.
 
     Returns:
         Dictionary with keys: path (str)
     """
     from dev10x import git as git_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await git_tools.next_worktree_name(base_dir=base_dir)).to_dict()
+    with use_cwd(cwd):
+        return (await git_tools.next_worktree_name(base_dir=base_dir)).to_dict()
 
 
 @server.tool()
@@ -611,43 +730,58 @@ async def mktmp(
 @server.tool()
 async def plan_sync_set_context(
     args: list[str],
+    cwd: str | None = None,
 ) -> dict:
     """Update plan context with key=value pairs.
 
     Args:
         args: K=V pairs (e.g., ["work_type=feature", "tickets=[...]"])
+        cwd: Effective working directory (GH-979). The plan file
+            location is computed relative to this repo's toplevel.
 
     Returns:
         Dictionary with keys: success (bool), updated_keys (list[str])
     """
     from dev10x import plan as plan_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return await plan_tools.set_context(args=args)
+    with use_cwd(cwd):
+        return await plan_tools.set_context(args=args)
 
 
 @server.tool()
-async def plan_sync_json_summary() -> dict:
+async def plan_sync_json_summary(cwd: str | None = None) -> dict:
     """Retrieve the current plan as a JSON summary.
+
+    Args:
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with plan metadata, context, and task list.
         Empty dict if no plan exists.
     """
     from dev10x import plan as plan_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return await plan_tools.json_summary()
+    with use_cwd(cwd):
+        return await plan_tools.json_summary()
 
 
 @server.tool()
-async def plan_sync_archive() -> dict:
+async def plan_sync_archive(cwd: str | None = None) -> dict:
     """Archive the current plan to a timestamped file and remove active plan.
+
+    Args:
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: success (bool), archive_name (str)
     """
     from dev10x import plan as plan_tools
+    from dev10x.subprocess_utils import use_cwd
 
-    return await plan_tools.archive()
+    with use_cwd(cwd):
+        return await plan_tools.archive()
 
 
 # ── GitHub review tools ────────────────────────────────────────
@@ -658,6 +792,7 @@ async def resolve_review_thread(
     thread_ids: list[str] | None = None,
     comment_ids: list[str] | None = None,
     repo: str | None = None,
+    cwd: str | None = None,
 ) -> dict:
     """Resolve GitHub PR review threads by thread ID or comment node ID.
 
@@ -668,57 +803,68 @@ async def resolve_review_thread(
         thread_ids: List of PRRT_ thread IDs to resolve directly
         comment_ids: List of GraphQL comment node IDs (thread lookup needed)
         repo: Repository (owner/repo). Required when using comment_ids.
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with GraphQL mutation results per resolved thread
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (
-        await gh.resolve_review_thread(
-            thread_ids=thread_ids,
-            comment_ids=comment_ids,
-            repo=repo,
-        )
-    ).to_dict()
+    with use_cwd(cwd):
+        return (
+            await gh.resolve_review_thread(
+                thread_ids=thread_ids,
+                comment_ids=comment_ids,
+                repo=repo,
+            )
+        ).to_dict()
 
 
 @server.tool()
 async def check_top_level_comments(
     pr_number: int,
     repo: str,
+    cwd: str | None = None,
 ) -> dict:
     """Check for unaddressed automated review comments on a PR.
 
     Args:
         pr_number: PR number to scan
         repo: Repository in owner/repo format
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: findings (list), count (int)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.check_top_level_comments(pr_number=pr_number, repo=repo)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.check_top_level_comments(pr_number=pr_number, repo=repo)).to_dict()
 
 
 @server.tool()
 async def unresolved_threads(
     repo: str,
     limit: int = 200,
+    cwd: str | None = None,
 ) -> dict:
     """Scan merged PRs for unresolved review comment threads.
 
     Args:
         repo: Repository in owner/repo format
         limit: Max PRs to scan (default 200)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with keys: prs (list), count (int)
     """
     from dev10x import github as gh
+    from dev10x.subprocess_utils import use_cwd
 
-    return (await gh.unresolved_threads(repo=repo, limit=limit)).to_dict()
+    with use_cwd(cwd):
+        return (await gh.unresolved_threads(repo=repo, limit=limit)).to_dict()
 
 
 # ── CI monitoring tools ────────────────────────────────────────
@@ -733,6 +879,7 @@ async def ci_check_status(
     poll_interval: int = 30,
     initial_wait: int = 60,
     max_polls: int = 60,
+    cwd: str | None = None,
 ) -> dict:
     """Check CI status for a PR and return a structured verdict.
 
@@ -744,21 +891,24 @@ async def ci_check_status(
         poll_interval: Seconds between polls (default 30)
         initial_wait: Initial wait before first poll (default 60)
         max_polls: Maximum number of polls (default 60)
+        cwd: Effective working directory (GH-979).
 
     Returns:
         Dictionary with verdict, mergeable status, and check details
     """
     from dev10x import monitor as mon
+    from dev10x.subprocess_utils import use_cwd
 
-    return await mon.ci_check_status(
-        pr_number=pr_number,
-        repo=repo,
-        required_only=required_only,
-        wait=wait,
-        poll_interval=poll_interval,
-        initial_wait=initial_wait,
-        max_polls=max_polls,
-    )
+    with use_cwd(cwd):
+        return await mon.ci_check_status(
+            pr_number=pr_number,
+            repo=repo,
+            required_only=required_only,
+            wait=wait,
+            poll_interval=poll_interval,
+            initial_wait=initial_wait,
+            max_polls=max_polls,
+        )
 
 
 # ── Permission maintenance tools ───────────────────────────────

@@ -34,7 +34,7 @@ def _get_branch() -> str:
 
 def _run_git(*args: str) -> str:
     try:
-        return GitContext.run(*args)
+        return GitContext().run(*args)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return ""
 

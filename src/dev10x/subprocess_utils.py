@@ -3,11 +3,44 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import subprocess
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
+
+# GH-979: long-lived MCP server processes inherit the CWD they were
+# spawned in. When Claude Code's EnterWorktree switches the session
+# to a worktree, MCP tools still run subprocesses against the main
+# repo. MCP entry points set this ContextVar so subprocess_utils can
+# transparently route every subprocess to the caller's effective CWD
+# without threading `cwd=` through dozens of internal signatures.
+_effective_cwd: ContextVar[str | None] = ContextVar("_effective_cwd", default=None)
+
+
+@contextlib.contextmanager
+def use_cwd(cwd: str | None):
+    """Bind subprocess_utils calls to `cwd` for the duration of the block.
+
+    Pass None (or omit) to leave the current binding untouched. MCP tool
+    entry points wrap their handler invocation with this context manager
+    when the caller passes `cwd=`.
+    """
+    if cwd is None:
+        yield
+        return
+    token = _effective_cwd.set(cwd)
+    try:
+        yield
+    finally:
+        _effective_cwd.reset(token)
+
+
+def effective_cwd() -> str | None:
+    """Return the bound effective CWD or None if unbound."""
+    return _effective_cwd.get()
 
 
 def get_plugin_root() -> Path:
@@ -35,7 +68,8 @@ def resolve_script_path(script_path: str) -> Path:
     MCP tools (GH-42). Otherwise fall back to the cached install
     discovered via `get_plugin_root()`.
     """
-    cwd = Path.cwd().resolve()
+    bound = _effective_cwd.get()
+    cwd = Path(bound).resolve() if bound else Path.cwd().resolve()
     for candidate in (cwd, *cwd.parents):
         if _matches_plugin_root(candidate):
             local_script = candidate / script_path
@@ -49,6 +83,7 @@ def run_script(
     script_path: str,
     *args: str,
     env_vars: dict[str, str] | None = None,
+    cwd: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     full_path = resolve_script_path(script_path)
 
@@ -64,6 +99,7 @@ def run_script(
         capture_output=True,
         text=True,
         env=env,
+        cwd=cwd if cwd is not None else _effective_cwd.get(),
         check=False,
     )
 
@@ -73,12 +109,14 @@ async def async_run(
     *,
     env: dict[str, str] | None = None,
     timeout: float = 30,
+    cwd: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     proc = await asyncio.create_subprocess_exec(
         *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=env,
+        cwd=cwd if cwd is not None else _effective_cwd.get(),
     )
     try:
         stdout_bytes, stderr_bytes = await asyncio.wait_for(
@@ -106,6 +144,7 @@ async def async_run_script(
     script_path: str,
     *args: str,
     env_vars: dict[str, str] | None = None,
+    cwd: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     full_path = resolve_script_path(script_path)
 
@@ -120,6 +159,7 @@ async def async_run_script(
         args=[str(full_path), *[str(a) for a in args]],
         env=env,
         timeout=60,
+        cwd=cwd,
     )
 
 
